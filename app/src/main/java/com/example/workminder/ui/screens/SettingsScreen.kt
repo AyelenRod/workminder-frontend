@@ -6,8 +6,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -54,6 +57,12 @@ fun SettingsScreen(navController: NavController) {
             SettingsItem(icon = Icons.Filled.Person, title = "Editar Perfil", onClick = {})
             Spacer(modifier = Modifier.height(12.dp))
             SettingsItem(icon = Icons.Filled.Notifications, title = "Notificaciones", onClick = {})
+            Spacer(modifier = Modifier.height(12.dp))
+            SettingsItem(icon = Icons.Filled.Security, title = "Privacidad y Seguridad", onClick = {})
+            Spacer(modifier = Modifier.height(12.dp))
+            SettingsItem(icon = Icons.Filled.Palette, title = "Apariencia", onClick = {})
+            Spacer(modifier = Modifier.height(12.dp))
+            SettingsItem(icon = Icons.Filled.Help, title = "Ayuda y Soporte", onClick = {})
             
             Spacer(modifier = Modifier.weight(1f))
             

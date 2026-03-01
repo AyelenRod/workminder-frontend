@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
@@ -73,7 +74,6 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Task name
             EditLabel("Nombre de la tarea")
             OutlinedTextField(
                 value = taskName, onValueChange = { taskName = it },
@@ -82,7 +82,6 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Subject
             EditLabel("Materia")
             ExposedDropdownMenuBox(expanded = subjectExpanded, onExpandedChange = { subjectExpanded = it }) {
                 OutlinedTextField(
@@ -96,7 +95,6 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Due date
             EditLabel("Fecha de entrega")
             OutlinedTextField(
                 value = dueDate, onValueChange = { dueDate = it },
@@ -105,7 +103,6 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Importance
             EditLabel("Importancia")
             ExposedDropdownMenuBox(expanded = importanceExpanded, onExpandedChange = { importanceExpanded = it }) {
                 OutlinedTextField(
@@ -119,7 +116,6 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Complexity
             EditLabel("Complejidad")
             ExposedDropdownMenuBox(expanded = complexityExpanded, onExpandedChange = { complexityExpanded = it }) {
                 OutlinedTextField(
@@ -133,7 +129,6 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Notes
             EditLabel("Notas extra")
             OutlinedTextField(
                 value = notes, onValueChange = { notes = it },
@@ -143,44 +138,43 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Subtasks
             EditLabel("Subtareas")
             subtasks.forEachIndexed { index, sub ->
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = sub, onValueChange = { subtasks[index] = it },
+                        placeholder = { Text("Nombre de la subtarea", color = TextSecondary) },
                         modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp),
                         singleLine = true, colors = editFieldColors()
                     )
-                    IconButton(onClick = { if (subtasks.size > 1) subtasks.removeAt(index) }) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Eliminar", tint = UrgentRed)
+                    if (subtasks.size > 1) {
+                        IconButton(onClick = { subtasks.removeAt(index) }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
             }
 
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, YellowPrimary),
-                color = Color.White,
-                modifier = Modifier.size(width = 48.dp, height = 36.dp).clickable { subtasks.add("") }
+            Button(
+                onClick = { subtasks.add("") },
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("+", color = NavyText, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
-                }
+                Text("+", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             }
-            
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Save button
             Button(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = SaveGreen, contentColor = Color.White)
             ) {
-                Text("Guardar cambios", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Aceptar cambios", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(40.dp))

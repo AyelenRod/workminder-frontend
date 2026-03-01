@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material3.*
@@ -38,7 +38,6 @@ fun BottomNavBar(navController: NavController) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Home
             IconButton(onClick = {
                 navController.navigate(NavRoutes.Dashboard.route) {
                     popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
@@ -53,7 +52,6 @@ fun BottomNavBar(navController: NavController) {
                 )
             }
 
-            // New Task (center)
             Box(
                 modifier = Modifier
                     .size(46.dp)
@@ -71,14 +69,13 @@ fun BottomNavBar(navController: NavController) {
                 }
             }
 
-            // Agenda / Calendar
             IconButton(onClick = {
                 navController.navigate(NavRoutes.Agenda.route) {
                     launchSingleTop = true
                 }
             }) {
                 Icon(
-                    imageVector = Icons.Filled.CalendarMonth,
+                    imageVector = Icons.Filled.EventNote,
                     contentDescription = "Agenda",
                     tint = NavyText.copy(alpha = if (currentRoute == NavRoutes.Agenda.route) 1f else 0.5f),
                     modifier = Modifier.size(28.dp)

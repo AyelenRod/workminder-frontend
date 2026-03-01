@@ -75,7 +75,6 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Task name
             FormLabel("Nombre de la tarea")
             OutlinedTextField(
                 value = taskName,
@@ -89,7 +88,6 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Subject dropdown
             FormLabel("Materia")
             ExposedDropdownMenuBox(expanded = subjectExpanded, onExpandedChange = { subjectExpanded = it }) {
                 OutlinedTextField(
@@ -111,7 +109,6 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Due date
             FormLabel("Fecha de entrega")
             OutlinedTextField(
                 value = dueDate,
@@ -128,7 +125,6 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Importance dropdown
             FormLabel("Importancia")
             ExposedDropdownMenuBox(expanded = importanceExpanded, onExpandedChange = { importanceExpanded = it }) {
                 OutlinedTextField(
@@ -150,7 +146,6 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Complexity dropdown
             FormLabel("Complejidad")
             ExposedDropdownMenuBox(expanded = complexityExpanded, onExpandedChange = { complexityExpanded = it }) {
                 OutlinedTextField(
@@ -172,7 +167,6 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Notes
             FormLabel("Notas extra")
             OutlinedTextField(
                 value = notes,
@@ -186,7 +180,6 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Subtasks
             FormLabel("Subtareas")
             subtasks.forEachIndexed { index, subtask ->
                 Row(
@@ -211,17 +204,16 @@ fun NewTaskScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(6.dp))
             }
 
-            OutlinedButton(
+            Button(
                 onClick = { subtasks.add("") },
                 shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, NavyText)
+                colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText)
             ) {
-                Text("+", color = NavyText, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text("+", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Save button
             Button(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth().height(50.dp),

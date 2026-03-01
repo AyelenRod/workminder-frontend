@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.workminder.data.model.MockData
 import com.example.workminder.ui.components.WorkMinderTopBar
+import com.example.workminder.ui.components.WorkMinderDialog
 import com.example.workminder.ui.navigation.NavRoutes
 import com.example.workminder.ui.theme.*
 
@@ -37,6 +38,8 @@ fun NewTaskScreen(navController: NavController) {
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
 
+    var showValidationError by remember { mutableStateOf(false) }
+
     val subjects    = listOf("Proyecto Integrador 2", "Cálculo Diferencial", "Física", "Química", "Sistemas Operativos")
     val importances = listOf("Muy urgente", "Algo urgente", "Muy poco urgente")
     val complexities= listOf("Alta", "Media", "Baja")
@@ -51,6 +54,16 @@ fun NewTaskScreen(navController: NavController) {
         },
         containerColor = BackgroundGray
     ) { innerPadding ->
+        if (showValidationError) {
+            WorkMinderDialog(
+                onDismissRequest = { showValidationError = false },
+                title = "Faltan datos",
+                message = "Por favor, completa todos los campos obligatorios para crear la tarea.",
+                confirmText = "Entendido",
+                onConfirm = { showValidationError = false }
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -219,7 +232,13 @@ fun NewTaskScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { navController.popBackStack() },
+                onClick = { 
+                    if (taskName.isBlank() || subject.isBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
+                        showValidationError = true
+                    } else {
+                        navController.popBackStack()
+                    }
+                },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = SaveGreen, contentColor = Color.White)

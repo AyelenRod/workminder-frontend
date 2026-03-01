@@ -31,7 +31,7 @@ fun NewTaskScreen(navController: NavController) {
     var importance  by remember { mutableStateOf("") }
     var complexity  by remember { mutableStateOf("") }
     var notes       by remember { mutableStateOf("") }
-    val subtasks    = remember { mutableStateListOf("") }
+    val subtasks    = remember { mutableStateListOf(java.util.UUID.randomUUID().toString() to "") }
 
     var subjectExpanded    by remember { mutableStateOf(false) }
     var importanceExpanded by remember { mutableStateOf(false) }
@@ -55,8 +55,10 @@ fun NewTaskScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
+                .padding(bottom = 64.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -182,22 +184,24 @@ fun NewTaskScreen(navController: NavController) {
 
             FormLabel("Subtareas")
             subtasks.forEachIndexed { index, subtask ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = subtask,
-                        onValueChange = { subtasks[index] = it },
-                        placeholder = { Text("Nombre de la subtarea", color = TextSecondary) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        singleLine = true,
-                        colors = fieldColors()
-                    )
-                    if (subtasks.size > 1) {
-                        IconButton(onClick = { subtasks.removeAt(index) }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                key(subtask.first) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = subtask.second,
+                            onValueChange = { subtasks[index] = subtask.first to it },
+                            placeholder = { Text("Nombre de la subtarea", color = TextSecondary) },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
+                            colors = fieldColors()
+                        )
+                        if (subtasks.size > 1) {
+                            IconButton(onClick = { subtasks.removeAt(index) }) {
+                                Icon(Icons.Filled.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                            }
                         }
                     }
                 }
@@ -205,7 +209,7 @@ fun NewTaskScreen(navController: NavController) {
             }
 
             Button(
-                onClick = { subtasks.add("") },
+                onClick = { subtasks.add(java.util.UUID.randomUUID().toString() to "") },
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText)
             ) {

@@ -54,15 +54,11 @@ fun SettingsScreen(navController: NavController) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             
-            SettingsItem(icon = Icons.Filled.Person, title = "Editar Perfil", onClick = {})
+            SettingsItem(icon = Icons.Filled.Person, title = "Editar Perfil", onClick = { navController.navigate(NavRoutes.EditProfile.route) })
             Spacer(modifier = Modifier.height(12.dp))
-            SettingsItem(icon = Icons.Filled.Notifications, title = "Notificaciones", onClick = {})
+            SettingsItem(icon = Icons.Filled.Notifications, title = "Notificaciones", onClick = { navController.navigate(NavRoutes.Notifications.route) })
             Spacer(modifier = Modifier.height(12.dp))
-            SettingsItem(icon = Icons.Filled.Security, title = "Privacidad y Seguridad", onClick = {})
-            Spacer(modifier = Modifier.height(12.dp))
-            SettingsItem(icon = Icons.Filled.Palette, title = "Apariencia", onClick = {})
-            Spacer(modifier = Modifier.height(12.dp))
-            SettingsItem(icon = Icons.Filled.Help, title = "Ayuda y Soporte", onClick = {})
+            SettingsItem(icon = Icons.Filled.Security, title = "Privacidad y Seguridad", onClick = { navController.navigate(NavRoutes.PrivacySecurity.route) })
             
             Spacer(modifier = Modifier.weight(1f))
             

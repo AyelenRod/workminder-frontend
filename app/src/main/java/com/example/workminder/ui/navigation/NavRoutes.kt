@@ -14,4 +14,8 @@ sealed class NavRoutes(val route: String) {
     object EditTask   : NavRoutes("edit_task/{taskId}") {
         fun createRoute(taskId: Int) = "edit_task/$taskId"
     }
+
+    object EditProfile : NavRoutes("edit_profile")
+    object Notifications : NavRoutes("notifications")
+    object PrivacySecurity : NavRoutes("privacy_security")
 }

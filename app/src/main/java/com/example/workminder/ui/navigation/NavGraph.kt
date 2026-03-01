@@ -15,6 +15,9 @@ import com.example.workminder.ui.screens.RegisterScreen
 import com.example.workminder.ui.screens.SettingsScreen
 import com.example.workminder.ui.screens.SplashScreen
 import com.example.workminder.ui.screens.TaskDetailScreen
+import com.example.workminder.ui.screens.EditProfileScreen
+import com.example.workminder.ui.screens.NotificationsScreen
+import com.example.workminder.ui.screens.PrivacySecurityScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -60,6 +63,15 @@ fun NavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getInt("taskId") ?: 0
             EditTaskScreen(taskId = taskId, navController = navController)
+        }
+        composable(NavRoutes.EditProfile.route) {
+            EditProfileScreen(navController = navController)
+        }
+        composable(NavRoutes.Notifications.route) {
+            NotificationsScreen(navController = navController)
+        }
+        composable(NavRoutes.PrivacySecurity.route) {
+            PrivacySecurityScreen(navController = navController)
         }
     }
 }

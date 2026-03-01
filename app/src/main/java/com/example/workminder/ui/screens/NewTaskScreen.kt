@@ -34,13 +34,11 @@ fun NewTaskScreen(navController: NavController) {
     var notes       by remember { mutableStateOf("") }
     val subtasks    = remember { mutableStateListOf(java.util.UUID.randomUUID().toString() to "") }
 
-    var subjectExpanded    by remember { mutableStateOf(false) }
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
 
     var showValidationError by remember { mutableStateOf(false) }
 
-    val subjects    = listOf("Proyecto Integrador 2", "Cálculo Diferencial", "Física", "Química", "Sistemas Operativos")
     val importances = listOf("Muy urgente", "Algo urgente", "Muy poco urgente")
     val complexities= listOf("Alta", "Media", "Baja")
 
@@ -104,23 +102,15 @@ fun NewTaskScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(14.dp))
 
             FormLabel("Materia")
-            ExposedDropdownMenuBox(expanded = subjectExpanded, onExpandedChange = { subjectExpanded = it }) {
-                OutlinedTextField(
-                    value = subject,
-                    onValueChange = {},
-                    readOnly = true,
-                    placeholder = { Text("Selecciona una opción", color = TextSecondary) },
-                    trailingIcon = { Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = fieldColors()
-                )
-                ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
-                    subjects.forEach { opt ->
-                        DropdownMenuItem(text = { Text(opt) }, onClick = { subject = opt; subjectExpanded = false })
-                    }
-                }
-            }
+            OutlinedTextField(
+                value = subject,
+                onValueChange = { subject = it },
+                placeholder = { Text("Ej: Matemáticas", color = TextSecondary) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                singleLine = true,
+                colors = fieldColors()
+            )
 
             Spacer(modifier = Modifier.height(14.dp))
 

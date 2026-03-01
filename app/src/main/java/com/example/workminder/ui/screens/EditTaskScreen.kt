@@ -43,13 +43,11 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
         }
     }
 
-    var subjectExpanded    by remember { mutableStateOf(false) }
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
 
     var showValidationError by remember { mutableStateOf(false) }
 
-    val subjects     = listOf("Proyecto Integrador 2", "Cálculo Diferencial", "Física", "Química", "Sistemas Operativos")
     val importances  = listOf("Muy urgente", "Algo urgente", "Muy poco urgente")
     val complexities = listOf("Alta", "Media", "Baja")
 
@@ -102,16 +100,11 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             EditLabel("Materia")
-            ExposedDropdownMenuBox(expanded = subjectExpanded, onExpandedChange = { subjectExpanded = it }) {
-                OutlinedTextField(
-                    value = subject, onValueChange = {}, readOnly = true,
-                    trailingIcon = { Icon(Icons.Filled.KeyboardArrowDown, null, tint = NavyText) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(8.dp), colors = editFieldColors()
-                )
-                ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
-                    subjects.forEach { opt -> DropdownMenuItem(text = { Text(opt) }, onClick = { subject = opt; subjectExpanded = false }) }
-                }
-            }
+            OutlinedTextField(
+                value = subject, onValueChange = { subject = it },
+                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), singleLine = true,
+                colors = editFieldColors()
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             EditLabel("Fecha de entrega")

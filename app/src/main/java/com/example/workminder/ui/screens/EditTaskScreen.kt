@@ -31,7 +31,7 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
     val original = MockData.tasks.find { it.id == taskId } ?: MockData.tasks.first()
 
     var taskName    by remember { mutableStateOf(original.title) }
-    var subject     by remember { mutableStateOf(original.subject) }
+    var subject     by remember { mutableStateOf(original.subject.name) }
     var dueDate     by remember { mutableStateOf(original.dueDate) }
     var importance  by remember { mutableStateOf(original.urgency.displayName) }
     var complexity  by remember { mutableStateOf(original.complexity) }
@@ -45,6 +45,7 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
 
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
+    var subjectExpanded by remember { mutableStateOf(false) }
 
     var showValidationError by remember { mutableStateOf(false) }
 
@@ -100,11 +101,18 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             EditLabel("Materia")
-            OutlinedTextField(
-                value = subject, onValueChange = { subject = it },
-                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), singleLine = true,
-                colors = editFieldColors()
-            )
+            ExposedDropdownMenuBox(expanded = subjectExpanded, onExpandedChange = { subjectExpanded = it }) {
+                OutlinedTextField(
+                    value = subject, onValueChange = {}, readOnly = true,
+                    trailingIcon = { Icon(Icons.Filled.KeyboardArrowDown, null, tint = NavyText) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(8.dp), colors = editFieldColors()
+                )
+                ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
+                    MockData.subjects.forEach { subj -> 
+                        DropdownMenuItem(text = { Text(subj.name) }, onClick = { subject = subj.name; subjectExpanded = false }) 
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
 
             EditLabel("Fecha de entrega")

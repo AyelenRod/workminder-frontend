@@ -63,9 +63,9 @@ fun TaskCard(
             }
             // Subject
             Text(
-                text = task.subject,
+                text = task.subject.name,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = try { Color(android.graphics.Color.parseColor(task.subject.colorHex)) } catch (e: Exception) { TextSecondary }
             )
             Spacer(modifier = Modifier.height(6.dp))
             // Status + urgency + button

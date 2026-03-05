@@ -81,7 +81,7 @@ fun TaskDetailScreen(taskId: Int, navController: NavController) {
                     
                     Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
                         Text(text = task.title, style = MaterialTheme.typography.headlineMedium, color = NavyText, fontWeight = FontWeight.Bold)
-                        Text(text = task.subject, style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
+                        Text(text = task.subject.name, style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         

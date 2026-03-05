@@ -36,6 +36,7 @@ fun NewTaskScreen(navController: NavController) {
 
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
+    var subjectExpanded by remember { mutableStateOf(false) }
 
     var showValidationError by remember { mutableStateOf(false) }
 
@@ -102,15 +103,19 @@ fun NewTaskScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(14.dp))
 
             FormLabel("Materia")
-            OutlinedTextField(
-                value = subject,
-                onValueChange = { subject = it },
-                placeholder = { Text("Ej: Matemáticas", color = TextSecondary) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                singleLine = true,
-                colors = fieldColors()
-            )
+            ExposedDropdownMenuBox(expanded = subjectExpanded, onExpandedChange = { subjectExpanded = it }) {
+                OutlinedTextField(
+                    value = subject, onValueChange = {}, readOnly = true,
+                    placeholder = { Text("Selecciona materia", color = TextSecondary) },
+                    trailingIcon = { Icon(Icons.Filled.KeyboardArrowDown, null, tint = NavyText) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(8.dp), colors = fieldColors()
+                )
+                ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
+                    MockData.subjects.forEach { subj -> 
+                        DropdownMenuItem(text = { Text(subj.name) }, onClick = { subject = subj.name; subjectExpanded = false }) 
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(14.dp))
 

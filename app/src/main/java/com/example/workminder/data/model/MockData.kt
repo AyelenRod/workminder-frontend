@@ -3,11 +3,19 @@ package com.example.workminder.data.model
 object MockData {
     const val userName = "Moisés"
 
+    val subjects = mutableListOf(
+        Subject(id = 1, name = "Proyecto Integrador 2", colorHex = "#FF5722"),
+        Subject(id = 2, name = "Sistemas Operativos", colorHex = "#3F51B5"),
+        Subject(id = 3, name = "Cálculo Diferencial", colorHex = "#009688"),
+        Subject(id = 4, name = "Química", colorHex = "#E91E63"),
+        Subject(id = 5, name = "Física", colorHex = "#9C27B0")
+    )
+
     val tasks = listOf(
         Task(
             id = 1,
             title = "Documentación",
-            subject = "Proyecto Integrador 2",
+            subject = subjects.first { it.id == 1 },
             dueDate = "01/03/2026",
             status = TaskStatus.PENDING,
             urgency = TaskUrgency.HIGH,
@@ -18,7 +26,7 @@ object MockData {
         Task(
             id = 2,
             title = "Diseños en Figma",
-            subject = "Proyecto Integrador 2",
+            subject = subjects.first { it.id == 1 },
             dueDate = "01/03/2026",
             status = TaskStatus.IN_PROGRESS,
             urgency = TaskUrgency.MEDIUM,
@@ -28,7 +36,7 @@ object MockData {
         Task(
             id = 3,
             title = "Póster",
-            subject = "Proyecto Integrador 2",
+            subject = subjects.first { it.id == 1 },
             dueDate = "01/03/2026",
             status = TaskStatus.IN_PROGRESS,
             urgency = TaskUrgency.LOW,
@@ -38,7 +46,7 @@ object MockData {
         Task(
             id = 4,
             title = "Práctica de laboratorio",
-            subject = "Sistemas Operativos",
+            subject = subjects.first { it.id == 2 },
             dueDate = "05/03/2026",
             status = TaskStatus.PENDING,
             urgency = TaskUrgency.MEDIUM,
@@ -47,7 +55,7 @@ object MockData {
         Task(
             id = 5,
             title = "Presentación final",
-            subject = "Cálculo Diferencial",
+            subject = subjects.first { it.id == 3 },
             dueDate = "08/03/2026",
             status = TaskStatus.PENDING,
             urgency = TaskUrgency.HIGH,
@@ -56,7 +64,7 @@ object MockData {
         Task(
             id = 6,
             title = "Reporte de resultados",
-            subject = "Química",
+            subject = subjects.first { it.id == 4 },
             dueDate = "12/03/2026",
             status = TaskStatus.PENDING,
             urgency = TaskUrgency.LOW,
@@ -65,7 +73,7 @@ object MockData {
         Task(
             id = 7,
             title = "Examen parcial",
-            subject = "Física",
+            subject = subjects.first { it.id == 5 },
             dueDate = "15/03/2026",
             status = TaskStatus.PENDING,
             urgency = TaskUrgency.MEDIUM,

@@ -9,10 +9,10 @@ sealed class NavRoutes(val route: String) {
     object Agenda     : NavRoutes("agenda")
     object NewTask    : NavRoutes("new_task")
     object TaskDetail : NavRoutes("task_detail/{taskId}") {
-        fun createRoute(taskId: Int) = "task_detail/$taskId"
+        fun createRoute(taskId: String) = "task_detail/$taskId"
     }
     object EditTask   : NavRoutes("edit_task/{taskId}") {
-        fun createRoute(taskId: Int) = "edit_task/$taskId"
+        fun createRoute(taskId: String) = "edit_task/$taskId"
     }
 
     object EditProfile : NavRoutes("edit_profile")

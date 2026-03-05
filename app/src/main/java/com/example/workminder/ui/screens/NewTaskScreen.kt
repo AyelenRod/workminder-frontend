@@ -112,7 +112,7 @@ fun NewTaskScreen(navController: NavController) {
                 )
                 ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
                     MockData.subjects.forEach { subj -> 
-                        DropdownMenuItem(text = { Text(subj.name) }, onClick = { subject = subj.name; subjectExpanded = false }) 
+                        DropdownMenuItem(text = { Text(subj.subject_name) }, onClick = { subject = subj.subject_name; subjectExpanded = false }) 
                     }
                 }
             }

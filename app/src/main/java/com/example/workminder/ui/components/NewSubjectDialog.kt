@@ -128,9 +128,9 @@ fun NewSubjectDialog(
                                 showError = true
                             } else {
                                 val newSubject = Subject(
-                                    id = MockData.subjects.maxOfOrNull { it.id }?.plus(1) ?: 1,
-                                    name = subjectName,
-                                    colorHex = selectedColor
+                                    id = java.util.UUID.randomUUID().toString(),
+                                    subject_name = subjectName,
+                                    color = selectedColor
                                 )
                                 MockData.subjects.add(newSubject)
                                 onSubjectCreated()

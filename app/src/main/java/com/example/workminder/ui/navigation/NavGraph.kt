@@ -52,16 +52,16 @@ fun NavGraph(navController: NavHostController) {
         }
         composable(
             route = NavRoutes.TaskDetail.route,
-            arguments = listOf(navArgument("taskId") { type = NavType.IntType })
+            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getInt("taskId") ?: 0
+            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
             TaskDetailScreen(taskId = taskId, navController = navController)
         }
         composable(
             route = NavRoutes.EditTask.route,
-            arguments = listOf(navArgument("taskId") { type = NavType.IntType })
+            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getInt("taskId") ?: 0
+            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
             EditTaskScreen(taskId = taskId, navController = navController)
         }
         composable(NavRoutes.EditProfile.route) {

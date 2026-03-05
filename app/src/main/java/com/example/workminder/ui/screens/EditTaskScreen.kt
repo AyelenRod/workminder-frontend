@@ -27,13 +27,13 @@ import com.example.workminder.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditTaskScreen(taskId: Int, navController: NavController) {
+fun EditTaskScreen(taskId: String, navController: NavController) {
     val original = MockData.tasks.find { it.id == taskId } ?: MockData.tasks.first()
 
-    var taskName    by remember { mutableStateOf(original.title) }
-    var subject     by remember { mutableStateOf(original.subject.name) }
-    var dueDate     by remember { mutableStateOf(original.dueDate) }
-    var importance  by remember { mutableStateOf(original.urgency.displayName) }
+    var taskName    by remember { mutableStateOf(original.task_title) }
+    var subject     by remember { mutableStateOf(com.example.workminder.data.model.getTaskSubjectName(original.subject_id)) }
+    var dueDate     by remember { mutableStateOf(original.due_date) }
+    var importance  by remember { mutableStateOf(com.example.workminder.data.model.getTaskUrgency(original.urgency).displayName) }
     var complexity  by remember { mutableStateOf(original.complexity) }
     var notes       by remember { mutableStateOf(original.notes) }
     val subtasks = remember {
@@ -109,7 +109,7 @@ fun EditTaskScreen(taskId: Int, navController: NavController) {
                 )
                 ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
                     MockData.subjects.forEach { subj -> 
-                        DropdownMenuItem(text = { Text(subj.name) }, onClick = { subject = subj.name; subjectExpanded = false }) 
+                        DropdownMenuItem(text = { Text(subj.subject_name) }, onClick = { subject = subj.subject_name; subjectExpanded = false }) 
                     }
                 }
             }

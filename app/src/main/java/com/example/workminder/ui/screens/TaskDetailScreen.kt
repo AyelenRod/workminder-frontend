@@ -24,13 +24,14 @@ import com.example.workminder.ui.navigation.NavRoutes
 import com.example.workminder.ui.theme.*
 
 @Composable
-fun TaskDetailScreen(taskId: Int, navController: NavController) {
+fun TaskDetailScreen(taskId: String, navController: NavController) {
     val task = MockData.tasks.find { it.id == taskId } ?: MockData.tasks.first()
 
-    val accentColor = when (task.urgency) {
-        TaskUrgency.HIGH   -> UrgentRed
-        TaskUrgency.MEDIUM -> UrgentYellow
-        TaskUrgency.LOW    -> UrgentCyan
+    val urgencyEnum = com.example.workminder.data.model.getTaskUrgency(task.urgency)
+    val accentColor = when (urgencyEnum) {
+        com.example.workminder.data.model.TaskUrgency.HIGH   -> UrgentRed
+        com.example.workminder.data.model.TaskUrgency.MEDIUM -> UrgentYellow
+        com.example.workminder.data.model.TaskUrgency.LOW    -> UrgentCyan
     }
 
     Scaffold(
@@ -81,12 +82,12 @@ fun TaskDetailScreen(taskId: Int, navController: NavController) {
                     
                     Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
                         Text(text = task.title, style = MaterialTheme.typography.headlineMedium, color = NavyText, fontWeight = FontWeight.Bold)
-                        Text(text = task.subject.name, style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
+                        Text(text = com.example.workminder.data.model.getTaskSubjectName(task.subject_id), style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         DetailItem(icon = Icons.Filled.AccessTime, label = "Fecha de entrega:", value = task.dueDate)
-                        DetailItem(icon = Icons.Filled.PriorityHigh, label = "Urgencia:", value = task.urgency.displayName, valueColor = accentColor)
+                        DetailItem(icon = Icons.Filled.PriorityHigh, label = "Urgencia:", value = urgencyEnum.displayName, valueColor = accentColor)
                         DetailItem(icon = Icons.Filled.TextFormat, label = "Importancia:", value = "Alta", valueColor = UrgentYellow) // Mocked A+ icon equivalent
                         DetailItem(icon = Icons.Filled.Description, label = "Complejidad:", value = task.complexity, valueColor = UrgentYellow)
                         DetailItem(icon = Icons.Filled.CheckCircleOutline, label = "Estado:", value = task.status.displayName, valueColor = UrgentYellow)

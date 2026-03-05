@@ -28,7 +28,7 @@ fun SubjectCard(
     onDeleteClick: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val color = try { Color(android.graphics.Color.parseColor(subject.colorHex)) } catch (e: Exception) { Color.Gray }
+    val color = try { Color(android.graphics.Color.parseColor(subject.color)) } catch (e: Exception) { Color.Gray }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -50,7 +50,7 @@ fun SubjectCard(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = subject.name,
+                    text = subject.subject_name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = NavyText,

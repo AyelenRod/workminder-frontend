@@ -12,15 +12,13 @@ data class Task(
     @SerializedName("urgency") val urgency: Double,
     @SerializedName("completed_at") val completed_at: String? = null,
     @SerializedName("subject_id") val subject_id: String? = null,
-    // Add dummy values to preserve legacy code for now
     var status: TaskStatus = TaskStatus.PENDING,
     val complexity: String = "Media",
     var notes: String = "",
     val subtasks: List<String> = emptyList(),
 ) {
-    // Legacy support
-    val taskTitle get() = task_title
-    val dueDate get() = due_date
+    val title: String get() = task_title
+    val dueDate: String get() = due_date
 }
 
 enum class TaskStatus(val displayName: String) {
@@ -29,3 +27,26 @@ enum class TaskStatus(val displayName: String) {
     DONE("Terminada"),
     LATE("Atrasada")
 }
+
+enum class TaskUrgency(val displayName: String) {
+    HIGH("Muy urgente"),
+    MEDIUM("Algo urgente"),
+    LOW("Muy poco urgente")
+}
+
+fun getTaskUrgency(urgencyVal: Double): TaskUrgency {
+    return when {
+        urgencyVal >= 0.7 -> TaskUrgency.HIGH
+        urgencyVal >= 0.4 -> TaskUrgency.MEDIUM
+        else -> TaskUrgency.LOW
+    }
+}
+
+fun getTaskSubjectName(subjectId: String?): String {
+    return MockData.subjects.find { it.id == subjectId }?.subject_name ?: "Sin materia"
+}
+
+fun getTaskSubjectColor(subjectId: String?): String {
+    return MockData.subjects.find { it.id == subjectId }?.color ?: "#808080"
+}    
+

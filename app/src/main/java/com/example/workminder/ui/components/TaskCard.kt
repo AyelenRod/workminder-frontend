@@ -27,10 +27,10 @@ fun TaskCard(
     onAddClick: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
-    val accentColor = when (task.urgency) {
-        TaskUrgency.HIGH   -> UrgentRed
-        TaskUrgency.MEDIUM -> UrgentYellow
-        TaskUrgency.LOW    -> UrgentCyan
+    val accentColor = when (com.example.workminder.data.model.getTaskUrgency(task.urgency)) {
+        com.example.workminder.data.model.TaskUrgency.HIGH   -> UrgentRed
+        com.example.workminder.data.model.TaskUrgency.MEDIUM -> UrgentYellow
+        com.example.workminder.data.model.TaskUrgency.LOW    -> UrgentCyan
     }
 
     Card(
@@ -63,9 +63,9 @@ fun TaskCard(
             }
             // Subject
             Text(
-                text = task.subject.name,
+                text = com.example.workminder.data.model.getTaskSubjectName(task.subject_id),
                 style = MaterialTheme.typography.bodyMedium,
-                color = try { Color(android.graphics.Color.parseColor(task.subject.colorHex)) } catch (e: Exception) { TextSecondary }
+                color = try { Color(android.graphics.Color.parseColor(com.example.workminder.data.model.getTaskSubjectColor(task.subject_id))) } catch (e: Exception) { TextSecondary }
             )
             Spacer(modifier = Modifier.height(6.dp))
             // Status + urgency + button
@@ -75,7 +75,7 @@ fun TaskCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${task.status.displayName} - ${task.urgency.displayName}",
+                    text = "${task.status.displayName} - ${com.example.workminder.data.model.getTaskUrgency(task.urgency).displayName}",
                     style = MaterialTheme.typography.labelMedium,
                     color = accentColor,
                     fontWeight = FontWeight.SemiBold

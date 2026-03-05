@@ -1,23 +1,33 @@
 package com.example.workminder.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.workminder.ui.theme.BackgroundGray
 import com.example.workminder.ui.theme.NavyText
 import com.example.workminder.ui.theme.SaveGreen
+import com.example.workminder.ui.theme.YellowPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(navController: NavController) {
+
+    // Estado mutable para los campos
+    var name  by remember { mutableStateOf("Moisés") }
+    var email by remember { mutableStateOf("moises@ejemplo.com") }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -41,44 +51,66 @@ fun EditProfileScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            
-            Text("Nombre", style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
+
+            Text(
+                "Nombre",
+                style = MaterialTheme.typography.titleMedium,
+                color = NavyText,
+                fontWeight = FontWeight.SemiBold
+            )
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
-                value = "Moisés", 
-                onValueChange = {}, 
-                modifier = Modifier.fillMaxWidth(), 
-                enabled = false,
+                value = name,
+                onValueChange = { name = it },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = true,
+                singleLine = true,
+                placeholder = { Text("Tu nombre", color = NavyText.copy(alpha = 0.4f)) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = NavyText,
-                    disabledBorderColor = NavyText.copy(alpha = 0.5f)
+                    focusedBorderColor   = YellowPrimary,
+                    unfocusedBorderColor = NavyText.copy(alpha = 0.35f),
+                    focusedTextColor     = NavyText,
+                    unfocusedTextColor   = NavyText
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            Text("Correo Electrónico", style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
+
+            Text(
+                "Correo Electrónico",
+                style = MaterialTheme.typography.titleMedium,
+                color = NavyText,
+                fontWeight = FontWeight.SemiBold
+            )
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
-                value = "moises@ejemplo.com", 
-                onValueChange = {}, 
-                modifier = Modifier.fillMaxWidth(), 
-                enabled = false,
+                value = email,
+                onValueChange = { email = it },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = true,
+                singleLine = true,
+                placeholder = { Text("tu@correo.com", color = NavyText.copy(alpha = 0.4f)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = NavyText,
-                    disabledBorderColor = NavyText.copy(alpha = 0.5f)
+                    focusedBorderColor   = YellowPrimary,
+                    unfocusedBorderColor = NavyText.copy(alpha = 0.35f),
+                    focusedTextColor     = NavyText,
+                    unfocusedTextColor   = NavyText
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             Button(
-                onClick = { navController.popBackStack() }, 
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                onClick = { navController.popBackStack() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = SaveGreen)
             ) {

@@ -42,6 +42,7 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
             if (it.isEmpty()) it.add(java.util.UUID.randomUUID().toString() to "")
         }
     }
+    val selectedReminders = remember { mutableStateListOf<Int>().apply { addAll(original.reminders) } }
 
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
@@ -51,6 +52,9 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
 
     val importances  = listOf("Muy urgente", "Algo urgente", "Muy poco urgente")
     val complexities = listOf("Alta", "Media", "Baja")
+    val reminderOptions = listOf(0, 1, 2, 3, 7)
+    val reminderLabels = mapOf(0 to "Hoy", 1 to "1 día antes", 2 to "2 días antes", 3 to "3 días antes", 7 to "1 semana antes")
+
 
     Scaffold(
         topBar = {
@@ -186,6 +190,31 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
                 Text("+", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            EditLabel("Recordatorios")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                reminderOptions.forEach { days ->
+                    val isSelected = selectedReminders.contains(days)
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            if (isSelected) selectedReminders.remove(days) else selectedReminders.add(days)
+                        },
+                        label = { Text(reminderLabels[days] ?: "${days}d") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = YellowPrimary,
+                            selectedLabelColor = NavyText,
+                            labelColor = TextSecondary
+                        )
+                    )
+                }
+            }
+
+
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
@@ -193,6 +222,41 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
                     if (taskName.isBlank() || subject.isBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
                         showValidationError = true
                     } else {
+                        val context = navController.context
+                        val scheduler = com.example.workminder.notifications.ReminderScheduler(context)
+                        
+                        // Cancelar recordatorios viejos y programar nuevos
+                        scheduler.cancelAll(original.id)
+                        scheduler.schedule(
+                            taskId = original.id,
+                            taskTitle = taskName,
+                            dueDateStr = dueDate,
+                            daysBefore = selectedReminders.toList()
+                        )
+
+                        // Mapear importancia a Double
+                        val importanceVal = when(importance) {
+                            "Muy urgente" -> 0.9
+                            "Algo urgente" -> 0.5
+                            "Muy poco urgente" -> 0.2
+                            else -> 0.5
+                        }
+                        
+                        // Buscar ID de materia
+                        val subId = MockData.subjects.find { it.subject_name == subject }?.id ?: original.subject_id
+
+                        val updated = original.copy(
+                            task_title = taskName,
+                            due_date = dueDate,
+                            urgency = importanceVal,
+                            complexity = complexity,
+                            notes = notes,
+                            subject_id = subId,
+                            subtasks = subtasks.map { it.second }.filter { it.isNotBlank() },
+                            reminders = selectedReminders.toList()
+                        )
+                        
+                        MockData.updateTask(updated)
                         navController.popBackStack()
                     }
                 },

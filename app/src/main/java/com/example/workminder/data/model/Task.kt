@@ -16,6 +16,7 @@ data class Task(
     val complexity: String = "Media",
     var notes: String = "",
     val subtasks: List<String> = emptyList(),
+    val reminders: List<Int> = emptyList()
 ) {
     val title: String get() = task_title
     val dueDate: String get() = due_date

@@ -40,11 +40,15 @@ fun AgendaScreen(navController: NavController) {
     var query by remember { mutableStateOf("") }
     var showFilter by remember { mutableStateOf(false) }
 
+    // Estado activo del filtro
+    var activeStatusFilter by remember { mutableStateOf("Todos") }  // "Todos", "Por hacer", "Atrasadas", "Terminadas"
+    var activeSortBy by remember { mutableStateOf("Fecha de entrega") }
+
     var thisWeekExpanded by remember { mutableStateOf(true) }
     var nextWeekExpanded by remember { mutableStateOf(false) }
     var laterExpanded by remember { mutableStateOf(false) }
 
-    var viewMode by remember { mutableStateOf("Tareas") } // "Tareas" o "Materias"
+    var viewMode by remember { mutableStateOf("Tareas") }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showNewSubjectDialog by remember { mutableStateOf(false) }
@@ -52,8 +56,60 @@ fun AgendaScreen(navController: NavController) {
 
     var editingSubject by remember { mutableStateOf<com.example.workminder.data.model.Subject?>(null) }
 
+    // Auto-status LATE: evalúa tareas cuya fecha de entrega ya pasó
+    LaunchedEffect(Unit) {
+        val today = java.time.LocalDate.now()
+        val fmt   = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        MockData.tasks.forEachIndexed { idx, task ->
+            if (task.status == com.example.workminder.data.model.TaskStatus.PENDING ||
+                task.status == com.example.workminder.data.model.TaskStatus.IN_PROGRESS) {
+                val due = try { java.time.LocalDate.parse(task.due_date, fmt) } catch (e: Exception) { null }
+                if (due != null && due.isBefore(today)) {
+                    MockData.tasks[idx] = task.copy(status = com.example.workminder.data.model.TaskStatus.LATE)
+                }
+            }
+        }
+    }
+
+    // Lista filtrada y ordenada
+    val filteredTasks = remember(query, activeStatusFilter, activeSortBy, MockData.tasks.size) {
+        var list = MockData.tasks.toList()
+
+        // Filtro de búsqueda
+        if (query.isNotBlank()) {
+            list = list.filter { it.task_title.contains(query, ignoreCase = true) }
+        }
+
+        // Filtro de estado
+        list = when (activeStatusFilter) {
+            "Por hacer"  -> list.filter {
+                it.status == com.example.workminder.data.model.TaskStatus.PENDING ||
+                it.status == com.example.workminder.data.model.TaskStatus.IN_PROGRESS
+            }
+            "Atrasadas"  -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.LATE }
+            "Terminadas" -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.DONE }
+            else -> list
+        }
+
+        // Ordenamiento
+        list = when (activeSortBy) {
+            "Importancia"       -> list.sortedByDescending { it.urgency }
+            "Complejidad"       -> list.sortedByDescending { it.complexity }
+            "Materia"           -> list.sortedBy { it.subject_id }
+            else                -> list.sortedBy { it.due_date } // "Fecha de entrega"
+        }
+        list
+    }
+
     if (showFilter) {
-        FilterDialog(onDismiss = { showFilter = false })
+        FilterDialog(
+            onDismiss = { showFilter = false },
+            onApply   = { sortBy, filter ->
+                activeSortBy       = sortBy
+                activeStatusFilter = filter
+                showFilter         = false
+            }
+        )
     }
 
     if (showNoSubjectsWarning) {
@@ -243,77 +299,104 @@ fun AgendaScreen(navController: NavController) {
             }
 
             if (viewMode == "Tareas") {
-                // Esta semana
-                item {
-                    TaskGroup(
-                        label = "Esta semana",
-                        count = MockData.thisWeekTasks.size,
-                        expanded = thisWeekExpanded,
-                        onToggle = { thisWeekExpanded = !thisWeekExpanded }
-                    )
-                }
-                item {
-                    AnimatedVisibility(visible = thisWeekExpanded) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            MockData.thisWeekTasks.forEach { task ->
-                                TaskCard(
-                                    task = task,
-                                    onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
+                if (query.isNotBlank() || activeStatusFilter != "Todos") {
+                    // Modo búsqueda/filtro: lista plana sin agrupar
+                    item {
+                        if (filteredTasks.isEmpty()) {
+                            Text(
+                                "No se encontraron tareas.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextSecondary,
+                                modifier = androidx.compose.ui.Modifier.padding(top = 24.dp)
+                            )
                         }
                     }
-                }
+                    items(filteredTasks) { task ->
+                        TaskCard(
+                            task = task,
+                            modifier = androidx.compose.ui.Modifier.padding(bottom = 8.dp),
+                            onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
+                        )
+                    }
+                    item { Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp)) }
+                } else {
+                    // Modo normal agrupado
+                    val thisWeek  = filteredTasks.take(3)
+                    val nextWeek  = filteredTasks.drop(3).take(2)
+                    val laterList = filteredTasks.drop(5)
 
-                // Siguiente semana
-                item {
-                    TaskGroup(
-                        label = "Siguiente semana",
-                        count = MockData.nextWeekTasks.size,
-                        expanded = nextWeekExpanded,
-                        onToggle = { nextWeekExpanded = !nextWeekExpanded }
-                    )
-                }
-                item {
-                    AnimatedVisibility(visible = nextWeekExpanded) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            MockData.nextWeekTasks.forEach { task ->
-                                TaskCard(
-                                    task = task,
-                                    onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
-                                )
+                    // Esta semana
+                    item {
+                        TaskGroup(
+                            label    = "Esta semana",
+                            count    = thisWeek.size,
+                            expanded = thisWeekExpanded,
+                            onToggle = { thisWeekExpanded = !thisWeekExpanded }
+                        )
+                    }
+                    item {
+                        AnimatedVisibility(visible = thisWeekExpanded) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                thisWeek.forEach { task ->
+                                    TaskCard(
+                                        task = task,
+                                        onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
+                                    )
+                                }
+                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
-                }
 
-                // Más tarde
-                item {
-                    TaskGroup(
-                        label = "Más tarde",
-                        count = MockData.laterTasks.size,
-                        expanded = laterExpanded,
-                        onToggle = { laterExpanded = !laterExpanded }
-                    )
-                }
-                item {
-                    AnimatedVisibility(visible = laterExpanded) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            MockData.laterTasks.forEach { task ->
-                                TaskCard(
-                                    task = task,
-                                    onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
-                                )
+                    // Siguiente semana
+                    item {
+                        TaskGroup(
+                            label    = "Siguiente semana",
+                            count    = nextWeek.size,
+                            expanded = nextWeekExpanded,
+                            onToggle = { nextWeekExpanded = !nextWeekExpanded }
+                        )
+                    }
+                    item {
+                        AnimatedVisibility(visible = nextWeekExpanded) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                nextWeek.forEach { task ->
+                                    TaskCard(
+                                        task = task,
+                                        onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
+                                    )
+                                }
+                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Más tarde
+                    item {
+                        TaskGroup(
+                            label    = "Más tarde",
+                            count    = laterList.size,
+                            expanded = laterExpanded,
+                            onToggle = { laterExpanded = !laterExpanded }
+                        )
+                    }
+                    item {
+                        AnimatedVisibility(visible = laterExpanded) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                laterList.forEach { task ->
+                                    TaskCard(
+                                        task = task,
+                                        onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
+                                    )
+                                }
+                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                            }
+                        }
+                        Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
+                    }
                 }
             } else {
                 // Materias Mode

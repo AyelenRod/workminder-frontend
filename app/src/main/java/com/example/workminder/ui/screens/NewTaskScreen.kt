@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.workminder.data.model.MockData
@@ -26,6 +27,7 @@ import com.example.workminder.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewTaskScreen(navController: NavController) {
+    val context = LocalContext.current
     var taskName    by remember { mutableStateOf("") }
     var subject     by remember { mutableStateOf("") }
     var dueDate     by remember { mutableStateOf("") }
@@ -33,6 +35,7 @@ fun NewTaskScreen(navController: NavController) {
     var complexity  by remember { mutableStateOf("") }
     var notes       by remember { mutableStateOf("") }
     val subtasks    = remember { mutableStateListOf(java.util.UUID.randomUUID().toString() to "") }
+    val selectedReminders = remember { mutableStateListOf<Int>() }
 
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
@@ -42,6 +45,9 @@ fun NewTaskScreen(navController: NavController) {
 
     val importances = listOf("Muy urgente", "Algo urgente", "Muy poco urgente")
     val complexities= listOf("Alta", "Media", "Baja")
+    val reminderOptions = listOf(0, 1, 2, 3, 7) // 0 es el día actual, 1 día antes, etc.
+    val reminderLabels = mapOf(0 to "Hoy", 1 to "1 día antes", 2 to "2 días antes", 3 to "3 días antes", 7 to "1 semana antes")
+
 
     Scaffold(
         topBar = {
@@ -226,11 +232,65 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            FormLabel("Recordatorios")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Modo simplificado con Chips o Botones (usaré botones por el diseño actual)
+                reminderOptions.forEach { days ->
+                    val isSelected = selectedReminders.contains(days)
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            if (isSelected) selectedReminders.remove(days) else selectedReminders.add(days)
+                        },
+                        label = { Text(reminderLabels[days] ?: "${days}d") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = YellowPrimary,
+                            selectedLabelColor = NavyText,
+                            labelColor = TextSecondary
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
                 onClick = { 
                     if (taskName.isBlank() || subject.isBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
                         showValidationError = true
                     } else {
+                        // Programar recordatorios reales
+                        val taskId = java.util.UUID.randomUUID().toString()
+                        val scheduler = com.example.workminder.notifications.ReminderScheduler(context)
+                        scheduler.schedule(
+                            taskId = taskId,
+                            taskTitle = taskName,
+                            dueDateStr = dueDate,
+                            daysBefore = selectedReminders.toList()
+                        )
+
+                        // Guardar en MockData (aunque sea local reflejará el cambio)
+                        val importanceValue = when(importance) {
+                            "Muy urgente" -> 0.9
+                            "Algo urgente" -> 0.5
+                            "Muy poco urgente" -> 0.2
+                            else -> 0.5
+                        }
+                        
+                        val newTask = com.example.workminder.data.model.Task(
+                            id = taskId,
+                            task_title = taskName,
+                            due_date = dueDate,
+                            urgency = importanceValue,
+                            complexity = complexity,
+                            notes = notes,
+                            subtasks = subtasks.map { it.second }.filter { it.isNotBlank() },
+                            reminders = selectedReminders.toList()
+                        )
+                        MockData.tasks.add(newTask)
                         navController.popBackStack()
                     }
                 },

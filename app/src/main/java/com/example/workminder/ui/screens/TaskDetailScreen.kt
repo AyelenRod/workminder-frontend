@@ -21,11 +21,22 @@ import com.example.workminder.data.model.MockData
 import com.example.workminder.data.model.TaskUrgency
 import com.example.workminder.ui.components.WorkMinderTopBar
 import com.example.workminder.ui.navigation.NavRoutes
+import androidx.compose.runtime.*
 import com.example.workminder.ui.theme.*
 
 @Composable
 fun TaskDetailScreen(taskId: String, navController: NavController) {
-    val task = MockData.tasks.find { it.id == taskId } ?: MockData.tasks.first()
+    // Estado mutable local para reflejar cambios de status y subtareas sin ViewModel
+    var task by remember {
+        mutableStateOf(MockData.tasks.find { it.id == taskId } ?: MockData.tasks.first())
+    }
+
+    // Subtareas checked (índice → marcado)
+    val checkedSubtasks = remember {
+        mutableStateMapOf<Int, Boolean>().also { map ->
+            task.subtasks.indices.forEach { map[it] = false }
+        }
+    }
 
     val urgencyEnum = com.example.workminder.data.model.getTaskUrgency(task.urgency)
     val accentColor = when (urgencyEnum) {
@@ -104,18 +115,34 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                         if (task.subtasks.isNotEmpty()) {
                             Text("Subtareas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
                             Spacer(modifier = Modifier.height(8.dp))
-                            task.subtasks.forEach { sub ->
+                            task.subtasks.forEachIndexed { idx, sub ->
+                                val checked = checkedSubtasks[idx] == true
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clickable { checkedSubtasks[idx] = !checked },
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Filled.SubdirectoryArrowRight, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                        Icon(Icons.Filled.SubdirectoryArrowRight, contentDescription = null, tint = if (checked) SaveGreen else TextSecondary, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(sub, style = MaterialTheme.typography.bodyMedium, color = TextSecondary, fontWeight = FontWeight.SemiBold)
+                                        Text(
+                                            text = sub,
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                textDecoration = if (checked) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
+                                            ),
+                                            color = if (checked) TextSecondary.copy(alpha = 0.5f) else TextSecondary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
                                     }
-                                    Icon(Icons.Filled.CheckBoxOutlineBlank, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                    Icon(
+                                        imageVector = if (checked) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank,
+                                        contentDescription = null,
+                                        tint = if (checked) SaveGreen else TextSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
                             }
                             Divider(modifier = Modifier.padding(vertical = 12.dp), color = NavyText.copy(alpha = 0.2f))
@@ -143,20 +170,34 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedButton(
-                                onClick = { /* TODO */ },
+                                onClick = {
+                                    val updated = task.copy(status = com.example.workminder.data.model.TaskStatus.DONE)
+                                    MockData.updateTask(updated)
+                                    task = updated
+                                },
                                 modifier = Modifier.weight(1f).height(40.dp),
                                 shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.5.dp, SaveGreen),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = SaveGreen)
+                                border = BorderStroke(1.5.dp, if (task.status == com.example.workminder.data.model.TaskStatus.DONE) SaveGreen else SaveGreen.copy(alpha = 0.5f)),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = if (task.status == com.example.workminder.data.model.TaskStatus.DONE) SaveGreen else NavyText.copy(alpha = 0.6f)
+                                )
                             ) {
                                 Text("Completada", fontWeight = FontWeight.Bold)
                             }
                             OutlinedButton(
-                                onClick = { /* TODO */ },
+                                onClick = {
+                                    if (task.status != com.example.workminder.data.model.TaskStatus.DONE) {
+                                        val updated = task.copy(status = com.example.workminder.data.model.TaskStatus.IN_PROGRESS)
+                                        MockData.updateTask(updated)
+                                        task = updated
+                                    }
+                                },
                                 modifier = Modifier.weight(1f).height(40.dp),
                                 shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.5.dp, YellowPrimary),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = YellowPrimary)
+                                border = BorderStroke(1.5.dp, if (task.status == com.example.workminder.data.model.TaskStatus.IN_PROGRESS) YellowPrimary else YellowPrimary.copy(alpha = 0.5f)),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = if (task.status == com.example.workminder.data.model.TaskStatus.IN_PROGRESS) YellowPrimary else NavyText.copy(alpha = 0.6f)
+                                )
                             ) {
                                 Text("En progreso", fontWeight = FontWeight.Bold)
                             }

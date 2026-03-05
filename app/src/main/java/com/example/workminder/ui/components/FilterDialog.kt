@@ -135,6 +135,17 @@ fun FilterDialog(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { onApply(sortBy, selectedFilter) },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText)
+                ) {
+                    Text("Aplicar filtros", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

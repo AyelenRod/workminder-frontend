@@ -21,15 +21,16 @@ import com.example.workminder.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewSubjectDialog(
+    editingSubject: Subject? = null,
     onDismissRequest: () -> Unit,
     onSubjectCreated: () -> Unit
 ) {
-    var subjectName by remember { mutableStateOf("") }
+    var subjectName by remember { mutableStateOf(editingSubject?.subject_name ?: "") }
     
     val defaultColors = listOf(
         "#FF5722", "#3F51B5", "#009688", "#E91E63", "#9C27B0", "#FFC107", "#4CAF50", "#00BCD4"
     )
-    var selectedColor by remember { mutableStateOf(defaultColors[0]) }
+    var selectedColor by remember { mutableStateOf(editingSubject?.color ?: defaultColors[0]) }
 
     var showError by remember { mutableStateOf(false) }
 
@@ -46,7 +47,7 @@ fun NewSubjectDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Nueva materia",
+                    text = if (editingSubject != null) "Editar materia" else "Nueva materia",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = NavyText
@@ -127,12 +128,16 @@ fun NewSubjectDialog(
                             if (subjectName.isBlank()) {
                                 showError = true
                             } else {
-                                val newSubject = Subject(
-                                    id = java.util.UUID.randomUUID().toString(),
-                                    subject_name = subjectName,
-                                    color = selectedColor
-                                )
-                                MockData.subjects.add(newSubject)
+                                if (editingSubject != null) {
+                                    MockData.updateSubject(editingSubject.copy(subject_name = subjectName, color = selectedColor))
+                                } else {
+                                    val newSubject = Subject(
+                                        id = java.util.UUID.randomUUID().toString(),
+                                        subject_name = subjectName,
+                                        color = selectedColor
+                                    )
+                                    MockData.subjects.add(newSubject)
+                                }
                                 onSubjectCreated()
                             }
                         },

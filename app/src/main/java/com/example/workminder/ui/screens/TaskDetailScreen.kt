@@ -177,7 +177,10 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                                 Text("Editar", fontWeight = FontWeight.Bold)
                             }
                             Button(
-                                onClick = { navController.popBackStack() },
+                                onClick = { 
+                                    com.example.workminder.data.model.MockData.removeTask(task.id)
+                                    navController.popBackStack() 
+                                },
                                 modifier = Modifier.weight(1f).height(44.dp),
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = UrgentRed, contentColor = Color.White)

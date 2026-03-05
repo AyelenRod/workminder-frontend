@@ -50,6 +50,8 @@ fun AgendaScreen(navController: NavController) {
     var showNewSubjectDialog by remember { mutableStateOf(false) }
     var showNoSubjectsWarning by remember { mutableStateOf(false) }
 
+    var editingSubject by remember { mutableStateOf<com.example.workminder.data.model.Subject?>(null) }
+
     if (showFilter) {
         FilterDialog(onDismiss = { showFilter = false })
     }
@@ -64,10 +66,17 @@ fun AgendaScreen(navController: NavController) {
         )
     }
 
-    if (showNewSubjectDialog) {
+    if (showNewSubjectDialog || editingSubject != null) {
         NewSubjectDialog(
-            onDismissRequest = { showNewSubjectDialog = false },
-            onSubjectCreated = { showNewSubjectDialog = false }
+            editingSubject = editingSubject,
+            onDismissRequest = { 
+                showNewSubjectDialog = false 
+                editingSubject = null
+            },
+            onSubjectCreated = { 
+                showNewSubjectDialog = false 
+                editingSubject = null
+            }
         )
     }
 
@@ -320,7 +329,13 @@ fun AgendaScreen(navController: NavController) {
                 items(MockData.subjects) { subject ->
                     SubjectCard(
                         subject = subject,
-                        modifier = Modifier.padding(bottom = 10.dp)
+                        modifier = Modifier.padding(bottom = 10.dp),
+                        onEditClick = {
+                            editingSubject = subject
+                        },
+                        onDeleteClick = {
+                            MockData.removeSubject(subject.id)
+                        }
                     )
                 }
                 item {

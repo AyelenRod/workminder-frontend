@@ -3,7 +3,7 @@ package com.example.workminder.data.model
 object MockData {
     const val userName = "Moisés"
 
-    val subjects = mutableListOf(
+    val subjects = androidx.compose.runtime.mutableStateListOf(
         Subject(id = "1", subject_name = "Proyecto Integrador 2", color = "#FF5722"),
         Subject(id = "2", subject_name = "Sistemas Operativos", color = "#3F51B5"),
         Subject(id = "3", subject_name = "Cálculo Diferencial", color = "#009688"),
@@ -89,6 +89,17 @@ object MockData {
         val index = tasks.indexOfFirst { it.id == updatedTask.id }
         if (index != -1) {
             tasks[index] = updatedTask
+        }
+    }
+
+    fun removeSubject(subjectId: String) {
+        subjects.removeAll { it.id == subjectId }
+    }
+
+    fun updateSubject(updatedSubject: Subject) {
+        val index = subjects.indexOfFirst { it.id == updatedSubject.id }
+        if (index != -1) {
+            subjects[index] = updatedSubject
         }
     }
 

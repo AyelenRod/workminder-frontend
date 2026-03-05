@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
+import com.example.workminder.notifications.NotificationPermissionHandler
 import com.example.workminder.ui.navigation.NavGraph
 import com.example.workminder.ui.theme.WorkMinderTheme
 
@@ -14,6 +15,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WorkMinderTheme {
+                // Solicita permiso de notificaciones en Android 13+
+                NotificationPermissionHandler()
                 val navController = rememberNavController()
                 NavGraph(navController = navController)
             }

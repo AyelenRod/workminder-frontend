@@ -78,4 +78,7 @@ dependencies {
 
     // --- OKHTTP (Para logs de red) ---
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // WorkManager (para notificaciones programadas)
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 }

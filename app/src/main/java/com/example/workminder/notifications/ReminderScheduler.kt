@@ -36,11 +36,18 @@ class ReminderScheduler(private val context: Context) {
         dueDateStr: String,
         daysBefore: List<Int>
     ) {
-        // Parsear la fecha de entrega
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        // Intentar parsear la fecha (Soporta ISO "YYYY-MM-DD" y local "DD/MM/YYYY")
         val dueDate = try {
-            LocalDate.parse(dueDateStr, formatter).atTime(22, 0) // 10 PM del día de entrega
+            if (dueDateStr.contains("-")) {
+                // Formato ISO: 2026-03-20 o 2026-03-20T...
+                val datePart = if (dueDateStr.contains("T")) dueDateStr.split("T")[0] else dueDateStr
+                LocalDate.parse(datePart, DateTimeFormatter.ISO_LOCAL_DATE).atTime(22, 0)
+            } else {
+                // Formato local: 20/03/2026
+                LocalDate.parse(dueDateStr, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atTime(22, 0)
+            }
         } catch (e: Exception) {
+            println("ReminderScheduler: Error parseando fecha '$dueDateStr': ${e.message}")
             return // fecha inválida, no programar
         }
 

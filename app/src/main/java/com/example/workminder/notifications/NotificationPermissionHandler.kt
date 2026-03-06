@@ -22,6 +22,16 @@ import androidx.core.content.ContextCompat
 fun NotificationPermissionHandler() {
     val context = LocalContext.current
 
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            println("Notificaciones: Permiso concedido.")
+        } else {
+            println("Notificaciones: Permiso denegado.")
+        }
+    }
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val hasPermission = ContextCompat.checkSelfPermission(
             context,
@@ -29,10 +39,6 @@ fun NotificationPermissionHandler() {
         ) == PackageManager.PERMISSION_GRANTED
 
         if (!hasPermission) {
-            val launcher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestPermission()
-            ) { /* resultado — no es necesario manejar, el sistema recuerda la respuesta */ }
-
             LaunchedEffect(Unit) {
                 launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }

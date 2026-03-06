@@ -1,5 +1,6 @@
 package com.example.workminder.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.workminder.data.model.MockData
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.workminder.ui.viewmodel.MainViewModel
 import com.example.workminder.data.model.Subtask
 import com.example.workminder.ui.components.WorkMinderTopBar
 import com.example.workminder.ui.components.WorkMinderDialog
@@ -27,10 +29,11 @@ import com.example.workminder.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewTaskScreen(navController: NavController) {
+fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewModel()) {
     val context = LocalContext.current
     var taskName    by remember { mutableStateOf("") }
-    var subject     by remember { mutableStateOf("") }
+    var selectedSubjectId by remember { mutableStateOf("") }
+    var selectedSubjectName by remember { mutableStateOf("") }
     var dueDate     by remember { mutableStateOf("") }
     var importance  by remember { mutableStateOf("") }
     var complexity  by remember { mutableStateOf("") }
@@ -54,7 +57,7 @@ fun NewTaskScreen(navController: NavController) {
         topBar = {
             WorkMinderTopBar(
                 subtitle = "La Agenda de", 
-                name = MockData.userName,
+                name = "Usuario",
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -100,7 +103,7 @@ fun NewTaskScreen(navController: NavController) {
             OutlinedTextField(
                 value = taskName,
                 onValueChange = { taskName = it },
-                placeholder = { Text("Placeholder de prueba", color = TextSecondary) },
+                placeholder = { Text("Escribe el nombre...", color = TextSecondary) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 singleLine = true,
@@ -112,29 +115,52 @@ fun NewTaskScreen(navController: NavController) {
             FormLabel("Materia")
             ExposedDropdownMenuBox(expanded = subjectExpanded, onExpandedChange = { subjectExpanded = it }) {
                 OutlinedTextField(
-                    value = subject, onValueChange = {}, readOnly = true,
+                    value = selectedSubjectName, onValueChange = {}, readOnly = true,
                     placeholder = { Text("Selecciona materia", color = TextSecondary) },
                     trailingIcon = { Icon(Icons.Filled.KeyboardArrowDown, null, tint = NavyText) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(8.dp), colors = fieldColors()
                 )
                 ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
-                    MockData.subjects.forEach { subj -> 
-                        DropdownMenuItem(text = { Text(subj.subject_name) }, onClick = { subject = subj.subject_name; subjectExpanded = false }) 
+                    viewModel.subjects.forEach { subj -> 
+                        DropdownMenuItem(text = { Text(subj.subject_name) }, onClick = { 
+                            selectedSubjectName = subj.subject_name
+                            selectedSubjectId = subj.id
+                            subjectExpanded = false 
+                        }) 
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            var showDatePicker by remember { mutableStateOf(false) }
+            if (showDatePicker) {
+                val calendar = java.util.Calendar.getInstance()
+                android.app.DatePickerDialog(
+                    context,
+                    { _, year, month, dayOfMonth ->
+                        // Formato YYYY-MM-DD
+                        dueDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                    },
+                    calendar.get(java.util.Calendar.YEAR),
+                    calendar.get(java.util.Calendar.MONTH),
+                    calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                ).show()
+                showDatePicker = false
+            }
+
             FormLabel("Fecha de entrega")
             OutlinedTextField(
                 value = dueDate,
                 onValueChange = { dueDate = it },
-                placeholder = { Text("dd/mm/aaaa", color = TextSecondary) },
+                readOnly = true,
+                placeholder = { Text("Selecciona una fecha", color = TextSecondary) },
                 trailingIcon = {
-                    Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = TextSecondary)
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = TextSecondary)
+                    }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
                 shape = RoundedCornerShape(8.dp),
                 singleLine = true,
                 colors = fieldColors()
@@ -238,7 +264,6 @@ fun NewTaskScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Modo simplificado con Chips o Botones (usaré botones por el diseño actual)
                 reminderOptions.forEach { days ->
                     val isSelected = selectedReminders.contains(days)
                     FilterChip(
@@ -260,20 +285,11 @@ fun NewTaskScreen(navController: NavController) {
 
             Button(
                 onClick = { 
-                    if (taskName.isBlank() || subject.isBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
+                    if (taskName.isBlank() || selectedSubjectId.isNullOrBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
                         showValidationError = true
                     } else {
-                        // Programar recordatorios reales
                         val taskId = java.util.UUID.randomUUID().toString()
-                        val scheduler = com.example.workminder.notifications.ReminderScheduler(context)
-                        scheduler.schedule(
-                            taskId = taskId,
-                            taskTitle = taskName,
-                            dueDateStr = dueDate,
-                            daysBefore = selectedReminders.toList()
-                        )
-
-                        // Guardar en MockData (aunque sea local reflejará el cambio)
+                        
                         val importanceValue = when(importance) {
                             "Muy urgente" -> 0.9
                             "Algo urgente" -> 0.5
@@ -295,12 +311,13 @@ fun NewTaskScreen(navController: NavController) {
                             urgency = importanceValue,
                             complexity = complexityValue,
                             notes = notes,
+                            subject_id = selectedSubjectId,
                             subtasks = subtasks.filter { it.second.isNotBlank() }.map { 
                                 Subtask(java.util.UUID.randomUUID().toString(), taskId, it.second) 
                             },
                             reminders = selectedReminders.toList()
                         )
-                        MockData.tasks.add(newTask)
+                        viewModel.createTask(newTask)
                         navController.popBackStack()
                     }
                 },

@@ -23,7 +23,8 @@ class TaskRepository(
                 }
             }
         } catch (e: Exception) {
-            // Manejar error de red
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            // Otros errores de red o parsing
         }
     }
 

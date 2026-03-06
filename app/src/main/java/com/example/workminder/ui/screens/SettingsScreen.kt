@@ -64,6 +64,7 @@ fun SettingsScreen(navController: NavController) {
             
             Button(
                 onClick = { 
+                    com.example.workminder.data.remote.AuthManager.clear()
                     navController.navigate(NavRoutes.Login.route) {
                         popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
                     }

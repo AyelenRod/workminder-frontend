@@ -1,5 +1,6 @@
 package com.example.workminder.data.remote
 
+import com.example.workminder.data.model.Subject
 import com.example.workminder.data.model.Task
 import retrofit2.Response
 import retrofit2.http.*
@@ -27,4 +28,17 @@ interface ApiService {
 
     @DELETE("api/tasks/{id}")
     suspend fun deleteTask(@Path("id") id: String): Response<ApiResponse<Unit>>
+
+    // Subjects
+    @GET("api/subjects")
+    suspend fun getSubjects(): Response<ApiResponse<List<Subject>>>
+
+    @POST("api/subjects")
+    suspend fun createSubject(@Body data: Map<String, String>): Response<ApiResponse<Subject>>
+
+    @PUT("api/subjects/{id}")
+    suspend fun updateSubject(@Path("id") id: String, @Body data: Map<String, String>): Response<ApiResponse<Subject>>
+
+    @DELETE("api/subjects/{id}")
+    suspend fun deleteSubject(@Path("id") id: String): Response<ApiResponse<Unit>>
 }

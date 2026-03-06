@@ -19,20 +19,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.workminder.data.model.MockData
 import com.example.workminder.data.model.Subtask
 import com.example.workminder.ui.components.WorkMinderTopBar
 import com.example.workminder.ui.components.WorkMinderDialog
 import com.example.workminder.ui.navigation.NavRoutes
 import com.example.workminder.ui.theme.*
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.workminder.ui.viewmodel.MainViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditTaskScreen(taskId: String, navController: NavController) {
-    val original = MockData.tasks.find { it.id == taskId } ?: MockData.tasks.first()
+fun EditTaskScreen(taskId: String, navController: NavController, viewModel: MainViewModel = viewModel()) {
+    val original = viewModel.tasks.find { it.id == taskId } ?: run {
+        LaunchedEffect(Unit) { navController.popBackStack() }
+        return
+    }
 
     var taskName    by remember { mutableStateOf(original.task_title) }
-    var subject     by remember { mutableStateOf(com.example.workminder.data.model.getTaskSubjectName(original.subject_id)) }
+    var selectedSubjectId by remember { mutableStateOf(original.subject_id) }
+    var selectedSubjectName by remember { 
+        mutableStateOf(viewModel.subjects.find { it.id == original.subject_id }?.subject_name ?: "") 
+    }
     var dueDate     by remember { mutableStateOf(original.due_date) }
     var importance  by remember { mutableStateOf(com.example.workminder.data.model.getTaskUrgency(original.urgency).displayName) }
     var complexity  by remember { 
@@ -69,7 +77,7 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
         topBar = {
             WorkMinderTopBar(
                 subtitle = "La Agenda de",
-                name = MockData.userName,
+                name = "Usuario",
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -116,23 +124,50 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
             EditLabel("Materia")
             ExposedDropdownMenuBox(expanded = subjectExpanded, onExpandedChange = { subjectExpanded = it }) {
                 OutlinedTextField(
-                    value = subject, onValueChange = {}, readOnly = true,
+                    value = selectedSubjectName, onValueChange = {}, readOnly = true,
                     trailingIcon = { Icon(Icons.Filled.KeyboardArrowDown, null, tint = NavyText) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(8.dp), colors = editFieldColors()
                 )
                 ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
-                    MockData.subjects.forEach { subj -> 
-                        DropdownMenuItem(text = { Text(subj.subject_name) }, onClick = { subject = subj.subject_name; subjectExpanded = false }) 
+                    viewModel.subjects.forEach { subj -> 
+                        DropdownMenuItem(text = { Text(subj.subject_name) }, onClick = { 
+                            selectedSubjectName = subj.subject_name
+                            selectedSubjectId = subj.id
+                            subjectExpanded = false 
+                        }) 
                     }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
 
+            val context = androidx.compose.ui.platform.LocalContext.current
+            var showDatePicker by remember { mutableStateOf(false) }
+            if (showDatePicker) {
+                val calendar = java.util.Calendar.getInstance()
+                android.app.DatePickerDialog(
+                    context,
+                    { _, year, month, dayOfMonth ->
+                        dueDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                    },
+                    calendar.get(java.util.Calendar.YEAR),
+                    calendar.get(java.util.Calendar.MONTH),
+                    calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                ).show()
+                showDatePicker = false
+            }
+
             EditLabel("Fecha de entrega")
             OutlinedTextField(
                 value = dueDate, onValueChange = { dueDate = it },
-                trailingIcon = { Icon(Icons.Filled.CalendarMonth, null, tint = TextSecondary) },
-                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), singleLine = true, colors = editFieldColors()
+                readOnly = true,
+                placeholder = { Text("Selecciona una fecha", color = TextSecondary) },
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Filled.CalendarMonth, null, tint = TextSecondary)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
+                shape = RoundedCornerShape(8.dp), singleLine = true, colors = editFieldColors()
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -228,22 +263,9 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
 
             Button(
                 onClick = { 
-                    if (taskName.isBlank() || subject.isBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
+                    if (taskName.isBlank() || selectedSubjectId.isNullOrBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
                         showValidationError = true
                     } else {
-                        val context = navController.context
-                        val scheduler = com.example.workminder.notifications.ReminderScheduler(context)
-                        
-                        // Cancelar recordatorios viejos y programar nuevos
-                        scheduler.cancelAll(original.id)
-                        scheduler.schedule(
-                            taskId = original.id,
-                            taskTitle = taskName,
-                            dueDateStr = dueDate,
-                            daysBefore = selectedReminders.toList()
-                        )
-
-                        // Mapear importancia a Double
                         val importanceVal = when(importance) {
                             "Muy urgente" -> 0.9
                             "Algo urgente" -> 0.5
@@ -251,9 +273,6 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
                             else -> 0.5
                         }
                         
-                        // Buscar ID de materia
-                        val subId = MockData.subjects.find { it.subject_name == subject }?.id ?: original.subject_id
-
                         val complexityValue = when(complexity) {
                             "Alta" -> 5
                             "Media" -> 3
@@ -267,9 +286,8 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
                             urgency = importanceVal,
                             complexity = complexityValue,
                             notes = notes,
-                            subject_id = subId,
+                            subject_id = selectedSubjectId,
                             subtasks = subtasks.filter { it.second.isNotBlank() }.map { subPair ->
-                                // Mantener el ID si ya existía, o crear uno nuevo
                                 val existing = original.subtasks.find { it.subtask_id == subPair.first }
                                 Subtask(
                                     subtask_id = subPair.first,
@@ -281,7 +299,7 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
                             reminders = selectedReminders.toList()
                         )
                         
-                        MockData.updateTask(updated)
+                        viewModel.updateTask(updated)
                         navController.popBackStack()
                     }
                 },

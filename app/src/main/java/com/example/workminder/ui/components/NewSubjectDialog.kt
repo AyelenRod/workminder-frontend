@@ -14,8 +14,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.workminder.data.model.MockData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.workminder.data.model.Subject
+import com.example.workminder.ui.viewmodel.MainViewModel
 import com.example.workminder.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,7 +24,8 @@ import com.example.workminder.ui.theme.*
 fun NewSubjectDialog(
     editingSubject: Subject? = null,
     onDismissRequest: () -> Unit,
-    onSubjectCreated: () -> Unit
+    onSubjectCreated: () -> Unit,
+    viewModel: MainViewModel = viewModel()
 ) {
     var subjectName by remember { mutableStateOf(editingSubject?.subject_name ?: "") }
     
@@ -129,14 +131,9 @@ fun NewSubjectDialog(
                                 showError = true
                             } else {
                                 if (editingSubject != null) {
-                                    MockData.updateSubject(editingSubject.copy(subject_name = subjectName, color = selectedColor))
+                                    // TODO: Implement updateSubject in ViewModel if needed
                                 } else {
-                                    val newSubject = Subject(
-                                        id = java.util.UUID.randomUUID().toString(),
-                                        subject_name = subjectName,
-                                        color = selectedColor
-                                    )
-                                    MockData.subjects.add(newSubject)
+                                    viewModel.addSubject(subjectName, selectedColor)
                                 }
                                 onSubjectCreated()
                             }

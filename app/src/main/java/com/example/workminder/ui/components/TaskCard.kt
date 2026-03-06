@@ -23,6 +23,8 @@ import com.example.workminder.ui.theme.*
 @Composable
 fun TaskCard(
     task: Task,
+    subjectName: String = "Sin materia",
+    subjectColor: String = "#808080",
     modifier: Modifier = Modifier,
     onAddClick: () -> Unit = {},
     onClick: () -> Unit = {}
@@ -56,16 +58,16 @@ fun TaskCard(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = task.dueDate,
+                    text = task.displayDate,
                     style = MaterialTheme.typography.bodySmall,
                     color = NavyText
                 )
             }
             // Subject
             Text(
-                text = com.example.workminder.data.model.getTaskSubjectName(task.subject_id),
+                text = subjectName,
                 style = MaterialTheme.typography.bodyMedium,
-                color = try { Color(android.graphics.Color.parseColor(com.example.workminder.data.model.getTaskSubjectColor(task.subject_id))) } catch (e: Exception) { TextSecondary }
+                color = try { Color(android.graphics.Color.parseColor(subjectColor)) } catch (e: Exception) { TextSecondary }
             )
             Spacer(modifier = Modifier.height(6.dp))
             // Status + urgency + button
@@ -75,7 +77,7 @@ fun TaskCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${task.status.displayName} - ${com.example.workminder.data.model.getTaskUrgency(task.urgency).displayName}",
+                    text = "${task.status?.displayName ?: "Pendiente"} - ${com.example.workminder.data.model.getTaskUrgency(task.urgency).displayName}",
                     style = MaterialTheme.typography.labelMedium,
                     color = accentColor,
                     fontWeight = FontWeight.SemiBold
@@ -90,7 +92,7 @@ fun TaskCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Add,
-                        contentDescription = "Marcar como hecha",
+                        contentDescription = "Ver detalles",
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )

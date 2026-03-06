@@ -13,20 +13,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.workminder.data.model.MockData
+import androidx.compose.runtime.*
 import com.example.workminder.ui.components.BottomNavBar
 import com.example.workminder.ui.components.TaskCard
 import com.example.workminder.ui.components.WorkMinderTopBar
 import com.example.workminder.ui.navigation.NavRoutes
 import com.example.workminder.ui.theme.*
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.workminder.ui.viewmodel.MainViewModel
+import com.example.workminder.data.model.TaskStatus
+
 @Composable
-fun DashboardScreen(navController: NavController) {
+fun DashboardScreen(navController: NavController, viewModel: MainViewModel = viewModel()) {
+    // Al entrar a la pantalla, refrescamos datos
+    LaunchedEffect(Unit) {
+        viewModel.refreshAll()
+    }
+
+    val activeTasks = viewModel.tasks.filter { it.status != TaskStatus.DONE }
+    val pendingCount = activeTasks.count { it.status == TaskStatus.PENDING || it.status == TaskStatus.IN_PROGRESS }
+    val lateCount = activeTasks.count { it.status == TaskStatus.LATE }
+
     Scaffold(
         topBar = {
             WorkMinderTopBar(
                 subtitle = "Hola de nuevo,",
-                name = MockData.userName,
+                name = "Usuario", // TODO: Obtener nombre real del perfil
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -42,6 +55,10 @@ fun DashboardScreen(navController: NavController) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (viewModel.isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = YellowPrimary)
+            }
+
             // Stats cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -49,12 +66,12 @@ fun DashboardScreen(navController: NavController) {
             ) {
                 StatCard(
                     label = "Tareas pendientes",
-                    count = MockData.pendingCount,
+                    count = pendingCount,
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
                     label = "Tareas atrasadas",
-                    count = MockData.lateCount,
+                    count = lateCount,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -69,10 +86,20 @@ fun DashboardScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            MockData.suggestedTasks.forEach { task ->
+            if (viewModel.tasks.isEmpty() && !viewModel.isLoading) {
+                Text("No tienes tareas pendientes. ¡Buen trabajo!", color = TextSecondary)
+            }
+
+            activeTasks.take(5).forEach { task ->
+                val subj = viewModel.subjects.find { it.id == task.subject_id }
                 TaskCard(
                     task = task,
+                    subjectName = subj?.subject_name ?: "Sin materia",
+                    subjectColor = subj?.color ?: "#808080",
                     onClick = {
+                        navController.navigate(NavRoutes.TaskDetail.createRoute(task.id))
+                    },
+                    onAddClick = {
                         navController.navigate(NavRoutes.TaskDetail.createRoute(task.id))
                     }
                 )

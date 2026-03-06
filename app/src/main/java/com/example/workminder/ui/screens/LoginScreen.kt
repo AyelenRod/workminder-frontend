@@ -28,14 +28,23 @@ import com.example.workminder.data.remote.AuthManager
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Error
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.workminder.ui.viewmodel.AuthViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+
+    // Observar éxito para navegar
+    LaunchedEffect(viewModel.isSuccess) {
+        if (viewModel.isSuccess) {
+            navController.navigate(NavRoutes.Dashboard.route) {
+                popUpTo(NavRoutes.Login.route) { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
         containerColor = BackgroundGray
@@ -79,12 +88,12 @@ fun LoginScreen(navController: NavController) {
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = YellowPrimary, unfocusedBorderColor = NavyText.copy(alpha = 0.3f))
             )
 
-            if (errorMessage != null) {
+            if (viewModel.errorMessage != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Error, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(errorMessage!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
+                    Text(viewModel.errorMessage!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -94,36 +103,15 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = {
                     if (email.isNotBlank() && password.isNotBlank()) {
-                        isLoading = true
-                        errorMessage = null
-                        scope.launch {
-                            try {
-                                val response = RetrofitClient.apiService.login(mapOf("email" to email, "password" to password))
-                                if (response.isSuccessful && response.body()?.success == true) {
-                                    val auth = response.body()?.data
-                                    AuthManager.token = auth?.accessToken
-                                    AuthManager.userId = auth?.user?.id
-                                    
-                                    navController.navigate(NavRoutes.Dashboard.route) {
-                                        popUpTo(NavRoutes.Login.route) { inclusive = true }
-                                    }
-                                } else {
-                                    errorMessage = response.body()?.error ?: "Credenciales incorrectas"
-                                }
-                            } catch (e: Exception) {
-                                errorMessage = "Error de conexión: ${e.message}"
-                            } finally {
-                                isLoading = false
-                            }
-                        }
+                        viewModel.login(email, password)
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText),
-                enabled = !isLoading
+                enabled = !viewModel.isLoading
             ) {
-                if (isLoading) {
+                if (viewModel.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = NavyText, strokeWidth = 2.dp)
                 } else {
                     Text("Entrar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

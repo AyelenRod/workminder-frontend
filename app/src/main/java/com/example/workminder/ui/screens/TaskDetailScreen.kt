@@ -24,14 +24,16 @@ import com.example.workminder.ui.navigation.NavRoutes
 import androidx.compose.runtime.*
 import com.example.workminder.ui.theme.*
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.workminder.ui.viewmodel.MainViewModel
+
 @Composable
-fun TaskDetailScreen(taskId: String, navController: NavController) {
-    // Estado mutable local para reflejar cambios de status y subtareas sin ViewModel
-    var task by remember {
-        mutableStateOf(MockData.tasks.find { it.id == taskId } ?: MockData.tasks.first())
+fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: MainViewModel = viewModel()) {
+    val task = viewModel.tasks.find { it.id == taskId } ?: run {
+        // Si no se encuentra, volver atrás o mostrar error
+        LaunchedEffect(Unit) { navController.popBackStack() }
+        return
     }
-
-
 
     val urgencyEnum = com.example.workminder.data.model.getTaskUrgency(task.urgency)
     val accentColor = when (urgencyEnum) {
@@ -44,7 +46,7 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
         topBar = {
             WorkMinderTopBar(
                 subtitle = "La Agenda de",
-                name = MockData.userName,
+                name = "Usuario",
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -84,32 +86,32 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
             ) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     // Left color bar
-                    Box(modifier = Modifier.width(6.dp).height(500.dp).background(accentColor))
+                    Box(modifier = Modifier.width(6.dp).height(550.dp).background(accentColor))
                     
                     Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
                         Text(text = task.title, style = MaterialTheme.typography.headlineMedium, color = NavyText, fontWeight = FontWeight.Bold)
-                        Text(text = com.example.workminder.data.model.getTaskSubjectName(task.subject_id), style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
+                        Text(text = viewModel.subjects.find { it.id == task.subject_id }?.subject_name ?: "Sin materia", style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        DetailItem(icon = Icons.Filled.AccessTime, label = "Fecha de entrega:", value = task.dueDate)
-                        DetailItem(icon = Icons.Filled.PriorityHigh, label = "Urgencia:", value = urgencyEnum.displayName, valueColor = accentColor)
-                        DetailItem(icon = Icons.Filled.TextFormat, label = "Importancia:", value = "Alta", valueColor = UrgentYellow) // Mocked A+ icon equivalent
+                        DetailItem(icon = Icons.Filled.AccessTime, label = "Fecha de entrega:", value = task.displayDate)
+                        DetailItem(icon = Icons.Filled.PriorityHigh, label = "Urgencia:", value = urgencyEnum.displayName, valueColor = UrgentRed)
+                        DetailItem(icon = Icons.Filled.TextFormat, label = "Importancia:", value = "Alta", valueColor = UrgentYellow) 
                         val complexityStr = when(task.complexity) {
                             1 -> "Baja"
                             5 -> "Alta"
                             else -> "Media"
                         }
                         DetailItem(icon = Icons.Filled.Description, label = "Complejidad:", value = complexityStr, valueColor = UrgentYellow)
-                        DetailItem(icon = Icons.Filled.CheckCircleOutline, label = "Estado:", value = task.status.displayName, valueColor = UrgentYellow)
+                        DetailItem(icon = Icons.Filled.CheckCircleOutline, label = "Estado:", value = task.status?.displayName ?: "Pendiente", valueColor = UrgentYellow)
 
-                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = NavyText.copy(alpha = 0.2f))
+                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
 
                         if (task.notes.isNotBlank()) {
                             Text("Notas extra", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(text = task.notes, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = NavyText.copy(alpha = 0.2f))
+                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
                         }
 
                         if (task.subtasks.isNotEmpty()) {
@@ -123,15 +125,13 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                                             .clickable { 
                                                 val updatedSubtasks = task.subtasks.toMutableList()
                                                 updatedSubtasks[idx] = sub.copy(is_completed = !sub.is_completed)
-                                                val updatedTask = task.copy(subtasks = updatedSubtasks)
-                                                MockData.updateTask(updatedTask)
-                                                task = updatedTask
+                                                viewModel.updateTask(task.copy(subtasks = updatedSubtasks))
                                             },
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        Icon(Icons.Filled.SubdirectoryArrowRight, contentDescription = null, tint = if (sub.is_completed) SaveGreen else TextSecondary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Filled.SubdirectoryArrowRight, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = sub.subtask_name,
@@ -145,12 +145,12 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                                     Icon(
                                         imageVector = if (sub.is_completed) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank,
                                         contentDescription = null,
-                                        tint = if (sub.is_completed) SaveGreen else TextSecondary,
+                                        tint = NavyText,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
-                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = NavyText.copy(alpha = 0.2f))
+                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
                         }
 
                         // Recordatorios
@@ -158,17 +158,17 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Surface(
                             shape = RoundedCornerShape(16.dp),
-                            border = BorderStroke(1.dp, NavyText.copy(alpha = 0.3f)),
+                            border = BorderStroke(1.dp, NavyText.copy(alpha = 0.5f)),
                             color = Color.White
                         ) {
                             Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.Notifications, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Filled.Notifications, contentDescription = null, tint = NavyText, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("1 día antes, 10:00 PM", style = MaterialTheme.typography.bodySmall, color = NavyText, fontWeight = FontWeight.SemiBold)
                             }
                         }
                         
-                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = NavyText.copy(alpha = 0.2f))
+                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
 
                         // Marcar como
                         Text("Marcar como", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
@@ -176,39 +176,31 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedButton(
                                 onClick = {
-                                    val updated = task.copy(status = com.example.workminder.data.model.TaskStatus.DONE)
-                                    MockData.updateTask(updated)
-                                    task = updated
+                                    viewModel.updateTask(task.copy(status = com.example.workminder.data.model.TaskStatus.DONE))
                                 },
-                                modifier = Modifier.weight(1f).height(40.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.5.dp, if (task.status == com.example.workminder.data.model.TaskStatus.DONE) SaveGreen else SaveGreen.copy(alpha = 0.5f)),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = if (task.status == com.example.workminder.data.model.TaskStatus.DONE) SaveGreen else NavyText.copy(alpha = 0.6f)
-                                )
+                                modifier = Modifier.weight(1f).height(44.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(2.dp, SaveGreen),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = SaveGreen)
                             ) {
                                 Text("Completada", fontWeight = FontWeight.Bold)
                             }
                             OutlinedButton(
                                 onClick = {
                                     if (task.status != com.example.workminder.data.model.TaskStatus.DONE) {
-                                        val updated = task.copy(status = com.example.workminder.data.model.TaskStatus.IN_PROGRESS)
-                                        MockData.updateTask(updated)
-                                        task = updated
+                                        viewModel.updateTask(task.copy(status = com.example.workminder.data.model.TaskStatus.IN_PROGRESS))
                                     }
                                 },
-                                modifier = Modifier.weight(1f).height(40.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.5.dp, if (task.status == com.example.workminder.data.model.TaskStatus.IN_PROGRESS) YellowPrimary else YellowPrimary.copy(alpha = 0.5f)),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = if (task.status == com.example.workminder.data.model.TaskStatus.IN_PROGRESS) YellowPrimary else NavyText.copy(alpha = 0.6f)
-                                )
+                                modifier = Modifier.weight(1f).height(44.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(2.dp, YellowPrimary),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = YellowPrimary)
                             ) {
                                 Text("En progreso", fontWeight = FontWeight.Bold)
                             }
                         }
 
-                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = NavyText.copy(alpha = 0.2f))
+                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
 
                         // Editar/Eliminar
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -224,7 +216,7 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                             }
                             Button(
                                 onClick = { 
-                                    com.example.workminder.data.model.MockData.removeTask(task.id)
+                                    viewModel.deleteTask(task)
                                     navController.popBackStack() 
                                 },
                                 modifier = Modifier.weight(1f).height(44.dp),

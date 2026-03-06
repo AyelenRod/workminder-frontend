@@ -37,11 +37,14 @@ import com.example.workminder.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.workminder.ui.viewmodel.MainViewModel
 import com.example.workminder.data.model.Subject
+import com.example.workminder.data.model.Task
+import com.example.workminder.data.model.TaskStatus
 
 @Composable
 fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewModel()) {
     var query by remember { mutableStateOf("") }
     var showFilter by remember { mutableStateOf(false) }
+<<<<<<< Updated upstream
     var activeStatusFilter by remember { mutableStateOf("Por hacer") }
     var activeSortBy by remember { mutableStateOf("Fecha de entrega") }
 
@@ -54,8 +57,21 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
     var showAddDialog by remember { mutableStateOf(false) }
     var showNewSubjectDialog by remember { mutableStateOf(false) }
     var showNoSubjectsWarning by remember { mutableStateOf(false) }
+=======
+    var activeStatusFilter by remember { mutableStateOf("Todos") }
+    var activeSortBy by remember { mutableStateOf("Fecha") }
+    var viewMode by remember { mutableStateOf("Tareas") }
+>>>>>>> Stashed changes
 
-    var editingSubject by remember { mutableStateOf<com.example.workminder.data.model.Subject?>(null) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var showNewSubjectDialog by remember { mutableStateOf(false) }
+    var showNoSubjectsWarning by remember { mutableStateOf(false) }
+
+    var thisWeekExpanded by remember { mutableStateOf(true) }
+    var nextWeekExpanded by remember { mutableStateOf(true) }
+    var laterExpanded by remember { mutableStateOf(true) }
+
+    var editingSubject by remember { mutableStateOf<Subject?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.refreshAll()
@@ -63,7 +79,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
 
     val filteredTasks by remember(query, activeStatusFilter, activeSortBy) {
         derivedStateOf {
-            var list: List<com.example.workminder.data.model.Task> = viewModel.tasks.toList()
+            var list: List<Task> = viewModel.tasks.toList()
 
             if (query.isNotBlank()) {
                 list = list.filter { 
@@ -71,15 +87,15 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                     it.notes.contains(query, ignoreCase = true)
                 }
             }
-
+//TaskCard
             list = when (activeStatusFilter) {
                 "Por hacer"  -> list.filter {
-                    it.status == com.example.workminder.data.model.TaskStatus.PENDING ||
-                    it.status == com.example.workminder.data.model.TaskStatus.IN_PROGRESS ||
-                    it.status == com.example.workminder.data.model.TaskStatus.LATE
+                    it.status == TaskStatus.PENDING ||
+                    it.status == TaskStatus.IN_PROGRESS ||
+                    it.status == TaskStatus.LATE
                 }
-                "Atrasadas"  -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.LATE }
-                "Terminadas" -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.DONE }
+                "Atrasadas"  -> list.filter { it.status == TaskStatus.LATE }
+                "Terminadas" -> list.filter { it.status == TaskStatus.DONE }
                 else -> list
             }
 
@@ -183,7 +199,8 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
             WorkMinderTopBar(
                 subtitle = "La Agenda de",
                 name = "Usuario",
-                onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
+                onSettingsClick = { navController.navigate(NavRoutes.Settings.route) },
+                subtitle = "La Agenda de"
             )
         },
         bottomBar = { BottomNavBar(navController = navController) },
@@ -299,7 +316,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                                 "No se encontraron tareas.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = TextSecondary,
-                                modifier = androidx.compose.ui.Modifier.padding(top = 24.dp)
+                                modifier = Modifier.padding(top = 24.dp)
                             )
                         }
                     }
@@ -309,12 +326,12 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                             task = task,
                             subjectName = subj?.subject_name ?: "Sin materia",
                             subjectColor = subj?.color ?: "#808080",
-                            modifier = androidx.compose.ui.Modifier.padding(bottom = 8.dp),
+                            modifier = Modifier.padding(bottom = 8.dp),
                             onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
                             onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                         )
                     }
-                    item { Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp)) }
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
                 } else {
                     // Modo normal agrupado
                     val thisWeek  = filteredTasks.take(3)
@@ -333,7 +350,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                     item {
                         AnimatedVisibility(visible = thisWeekExpanded) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                                 for (task in thisWeek) {
                                     val subj = viewModel.subjects.find { it.id == task.subject_id }
                                     TaskCard(
@@ -344,7 +361,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                                         onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                                     )
                                 }
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
                     }
@@ -361,7 +378,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                     item {
                         AnimatedVisibility(visible = nextWeekExpanded) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                                 for (task in nextWeek) {
                                     val subj = viewModel.subjects.find { it.id == task.subject_id }
                                     TaskCard(
@@ -372,7 +389,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                                         onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                                     )
                                 }
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
                     }
@@ -389,7 +406,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                     item {
                         AnimatedVisibility(visible = laterExpanded) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                                 for (task in laterList) {
                                     val subj = viewModel.subjects.find { it.id == task.subject_id }
                                     TaskCard(
@@ -403,10 +420,10 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                                         onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                                     )
                                 }
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
-                        Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             } else {

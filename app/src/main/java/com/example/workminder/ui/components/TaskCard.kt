@@ -18,21 +18,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.workminder.data.model.Task
 import com.example.workminder.data.model.TaskUrgency
+import com.example.workminder.data.model.getTaskUrgency
 import com.example.workminder.ui.theme.*
 
 @Composable
 fun TaskCard(
     task: Task,
-    subjectName: String = "Sin materia",
-    subjectColor: String = "#808080",
+    subjectName: String, // Cambiado de 'subtitle' a 'subjectName' para sincronizar
+    subjectColor: String, // Agregado para recibir el color de la materia
     modifier: Modifier = Modifier,
     onAddClick: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
-    val accentColor = when (com.example.workminder.data.model.getTaskUrgency(task.urgency)) {
-        com.example.workminder.data.model.TaskUrgency.HIGH   -> UrgentRed
-        com.example.workminder.data.model.TaskUrgency.MEDIUM -> UrgentYellow
-        com.example.workminder.data.model.TaskUrgency.LOW    -> UrgentCyan
+    // Convertimos el valor numérico (Double) de la DB al Enum visual
+    val urgencyLevel = getTaskUrgency(task.urgency)
+
+    val accentColor = when (urgencyLevel) {
+        TaskUrgency.HIGH   -> UrgentRed
+        TaskUrgency.MEDIUM -> UrgentYellow
+        TaskUrgency.LOW    -> UrgentCyan
     }
 
     Card(
@@ -45,7 +49,6 @@ fun TaskCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // Title + date row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -58,26 +61,27 @@ fun TaskCard(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = task.displayDate,
+                    text = task.displayDate, // Formato DD/MM/YYYY definido en Task.kt
                     style = MaterialTheme.typography.bodySmall,
                     color = NavyText
                 )
             }
-            // Subject
+
             Text(
-                text = subjectName,
+                text = subjectName, // Usamos el nombre que calculamos en AgendaScreen
                 style = MaterialTheme.typography.bodyMedium,
-                color = try { Color(android.graphics.Color.parseColor(subjectColor)) } catch (e: Exception) { TextSecondary }
+                color = Color(android.graphics.Color.parseColor(subjectColor)).copy(alpha = 0.8f)
             )
+
             Spacer(modifier = Modifier.height(6.dp))
-            // Status + urgency + button
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${task.status?.displayName ?: "Pendiente"} - ${com.example.workminder.data.model.getTaskUrgency(task.urgency).displayName}",
+                    text = "${task.status?.displayName ?: "Pendiente"} - ${urgencyLevel.displayName}",
                     style = MaterialTheme.typography.labelMedium,
                     color = accentColor,
                     fontWeight = FontWeight.SemiBold
@@ -88,6 +92,7 @@ fun TaskCard(
                         .clickable { onAddClick() },
                     contentAlignment = Alignment.Center
                 ) {
+<<<<<<< Updated upstream
                     Box(
                         modifier = Modifier
                             .size(28.dp)
@@ -102,6 +107,14 @@ fun TaskCard(
                             modifier = Modifier.size(18.dp)
                         )
                     }
+=======
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Completar",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+>>>>>>> Stashed changes
                 }
             }
         }

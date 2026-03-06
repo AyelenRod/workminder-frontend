@@ -100,7 +100,7 @@ fun DashboardScreen(navController: NavController, viewModel: MainViewModel = vie
                         navController.navigate(NavRoutes.TaskDetail.createRoute(task.id))
                     },
                     onAddClick = {
-                        navController.navigate(NavRoutes.TaskDetail.createRoute(task.id))
+                        navController.navigate(NavRoutes.EditTask.createRoute(task.id))
                     }
                 )
                 Spacer(modifier = Modifier.height(10.dp))

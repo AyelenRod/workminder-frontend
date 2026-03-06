@@ -304,11 +304,19 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                             else -> 3
                         }
                         
+                        val importanceInt = when(importance) {
+                            "Muy urgente" -> 5
+                            "Algo urgente" -> 3
+                            "Muy poco urgente" -> 1
+                            else -> 3
+                        }
+                        
                         val newTask = com.example.workminder.data.model.Task(
                             id = taskId,
                             task_title = taskName,
                             due_date = dueDate,
                             urgency = importanceValue,
+                            importance = importanceInt,
                             complexity = complexityValue,
                             notes = notes,
                             subject_id = selectedSubjectId,

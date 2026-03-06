@@ -37,12 +37,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         refreshAll()
     }
 
+    private var refreshJob: kotlinx.coroutines.Job? = null
+
     fun refreshAll() {
-        viewModelScope.launch {
+        if (refreshJob?.isActive == true) return
+        refreshJob = viewModelScope.launch {
             isLoading = true
             try {
                 taskRepo.syncTasks()
-
                 val sRes = subjectRepo.getSubjects()
                 if (sRes.isSuccessful) {
                     subjects.clear()
@@ -51,7 +53,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 if (e !is kotlinx.coroutines.CancellationException) {
                     error = e.message
-                    println("Error en refreshAll: ${e.message}")
                 }
             } finally {
                 isLoading = false

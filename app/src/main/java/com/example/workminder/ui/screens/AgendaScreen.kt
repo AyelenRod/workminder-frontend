@@ -42,6 +42,18 @@ import com.example.workminder.data.model.Subject
 fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewModel()) {
     var query by remember { mutableStateOf("") }
     var showFilter by remember { mutableStateOf(false) }
+    var activeStatusFilter by remember { mutableStateOf("Por hacer") }
+    var activeSortBy by remember { mutableStateOf("Fecha de entrega") }
+
+    var thisWeekExpanded by remember { mutableStateOf(true) }
+    var nextWeekExpanded by remember { mutableStateOf(false) }
+    var laterExpanded by remember { mutableStateOf(false) }
+
+    var viewMode by remember { mutableStateOf("Tareas") }
+
+    var showAddDialog by remember { mutableStateOf(false) }
+    var showNewSubjectDialog by remember { mutableStateOf(false) }
+    var showNoSubjectsWarning by remember { mutableStateOf(false) }
 
     var editingSubject by remember { mutableStateOf<com.example.workminder.data.model.Subject?>(null) }
 
@@ -138,7 +150,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                         onClick = {
                             showAddDialog = false
                             if (viewModel.subjects.isEmpty()) {
-                                showNoSubjectsWarning = true
+                                showNewSubjectDialog = true // Directo a crear materia
                             } else {
                                 navController.navigate(NavRoutes.NewTask.route)
                             }
@@ -169,6 +181,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
     Scaffold(
         topBar = {
             WorkMinderTopBar(
+                subtitle = "La Agenda de",
                 name = "Usuario",
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
@@ -298,7 +311,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                             subjectColor = subj?.color ?: "#808080",
                             modifier = androidx.compose.ui.Modifier.padding(bottom = 8.dp),
                             onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
-                            onAddClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
+                            onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                         )
                     }
                     item { Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp)) }
@@ -328,7 +341,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                                         subjectName = subj?.subject_name ?: "Sin materia",
                                         subjectColor = subj?.color ?: "#808080",
                                         onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
-                                        onAddClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
+                                        onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                                     )
                                 }
                                 Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
@@ -356,7 +369,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                                         subjectName = subj?.subject_name ?: "Sin materia",
                                         subjectColor = subj?.color ?: "#808080",
                                         onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
-                                        onAddClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
+                                        onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                                     )
                                 }
                                 Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
@@ -387,7 +400,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                                         onClick = {
                                             navController.navigate(NavRoutes.TaskDetail.createRoute(task.id))
                                         },
-                                        onAddClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) }
+                                        onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                                     )
                                 }
                                 Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))

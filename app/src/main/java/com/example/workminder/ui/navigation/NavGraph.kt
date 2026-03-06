@@ -21,6 +21,9 @@ import com.example.workminder.ui.screens.PrivacySecurityScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
+    // Creamos el ViewModel aquí para que sea compartido por todas las pantallas del NavHost
+    val sharedViewModel: com.example.workminder.ui.viewmodel.MainViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+
     NavHost(
         navController   = navController,
         startDestination = NavRoutes.Splash.route
@@ -42,27 +45,27 @@ fun NavGraph(navController: NavHostController) {
             SettingsScreen(navController = navController)
         }
         composable(NavRoutes.Dashboard.route) {
-            DashboardScreen(navController = navController)
+            DashboardScreen(navController = navController, viewModel = sharedViewModel)
         }
         composable(NavRoutes.Agenda.route) {
-            AgendaScreen(navController = navController)
+            AgendaScreen(navController = navController, viewModel = sharedViewModel)
         }
         composable(NavRoutes.NewTask.route) {
-            NewTaskScreen(navController = navController)
+            NewTaskScreen(navController = navController, viewModel = sharedViewModel)
         }
         composable(
             route = NavRoutes.TaskDetail.route,
             arguments = listOf(navArgument("taskId") { type = NavType.StringType })
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-            TaskDetailScreen(taskId = taskId, navController = navController)
+            TaskDetailScreen(taskId = taskId, navController = navController, viewModel = sharedViewModel)
         }
         composable(
             route = NavRoutes.EditTask.route,
             arguments = listOf(navArgument("taskId") { type = NavType.StringType })
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-            EditTaskScreen(taskId = taskId, navController = navController)
+            EditTaskScreen(taskId = taskId, navController = navController, viewModel = sharedViewModel)
         }
         composable(NavRoutes.EditProfile.route) {
             EditProfileScreen(navController = navController)

@@ -30,7 +30,13 @@ class TaskRepository(
         try {
             val response = apiService.createTask(task)
             if (response.isSuccessful && response.body()?.success == true) {
-                response.body()?.data?.let { taskDao.insertTask(it) }
+                val remoteTask = response.body()?.data
+                if (remoteTask != null) {
+                    if (remoteTask.id != task.id) {
+                        taskDao.deleteTaskById(task.id)
+                    }
+                    taskDao.insertTask(remoteTask)
+                }
             }
         } catch (e: Exception) {
         }

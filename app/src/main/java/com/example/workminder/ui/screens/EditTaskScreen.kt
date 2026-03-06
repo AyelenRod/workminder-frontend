@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +30,7 @@ import com.example.workminder.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.workminder.ui.viewmodel.MainViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditTaskScreen(taskId: String, navController: NavController, viewModel: MainViewModel = viewModel()) {
     val original = viewModel.tasks.find { it.id == taskId } ?: run {
@@ -69,8 +71,8 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
 
     val importances  = listOf("Muy urgente", "Algo urgente", "Muy poco urgente")
     val complexities = listOf("Alta", "Media", "Baja")
-    val reminderOptions = listOf(0, 1, 2, 3, 7)
-    val reminderLabels = mapOf(0 to "Hoy", 1 to "1 día antes", 2 to "2 días antes", 3 to "3 días antes", 7 to "1 semana antes")
+    val reminderOptions = listOf(0, 1, 2, 3)
+    val reminderLabels = mapOf(0 to "Hoy", 1 to "1 día antes", 2 to "2 días antes", 3 to "3 días antes")
 
 
     Scaffold(
@@ -237,9 +239,10 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
             Spacer(modifier = Modifier.height(24.dp))
 
             EditLabel("Recordatorios")
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 reminderOptions.forEach { days ->
                     val isSelected = selectedReminders.contains(days)

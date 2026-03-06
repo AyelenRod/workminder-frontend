@@ -217,7 +217,6 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
                             Button(
                                 onClick = { 
                                     viewModel.deleteTask(task)
-                                    navController.popBackStack() 
                                 },
                                 modifier = Modifier.weight(1f).height(44.dp),
                                 shape = RoundedCornerShape(8.dp),

@@ -10,10 +10,8 @@ class TaskRepository(
     private val taskDao: TaskDao,
     private val apiService: ApiService
 ) {
-    // Retorna flujo de la BD local
     fun getAllTasks(): Flow<List<Task>> = taskDao.getAllTasks()
 
-    // Sincroniza de remoto a local
     suspend fun syncTasks() {
         try {
             val response = apiService.getTasks()
@@ -24,22 +22,17 @@ class TaskRepository(
             }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            // Otros errores de red o parsing
         }
     }
 
     suspend fun createTask(task: Task) {
-        // Guardar local primero (Offline-First)
         taskDao.insertTask(task)
         try {
-            // Intentar enviar al backend
             val response = apiService.createTask(task)
             if (response.isSuccessful && response.body()?.success == true) {
-                // Actualizar con datos del server si es necesario (ej. IDs generados)
                 response.body()?.data?.let { taskDao.insertTask(it) }
             }
         } catch (e: Exception) {
-            // Si falla, se queda en BD local para sincronizar luego
         }
     }
 
@@ -48,7 +41,6 @@ class TaskRepository(
         try {
             apiService.updateTask(task.id, task)
         } catch (e: Exception) {
-            // Pendiente de sincronización
         }
     }
 
@@ -57,7 +49,6 @@ class TaskRepository(
         try {
             apiService.deleteTask(task.id)
         } catch (e: Exception) {
-            // Pendiente de sincronización
         }
     }
 }

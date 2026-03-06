@@ -43,33 +43,16 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
     var query by remember { mutableStateOf("") }
     var showFilter by remember { mutableStateOf(false) }
 
-    // Estado activo del filtro
-    var activeStatusFilter by remember { mutableStateOf("Por hacer") }  // "Todos", "Por hacer", "Atrasadas", "Terminadas"
-    var activeSortBy by remember { mutableStateOf("Fecha de entrega") }
-
-    var thisWeekExpanded by remember { mutableStateOf(true) }
-    var nextWeekExpanded by remember { mutableStateOf(false) }
-    var laterExpanded by remember { mutableStateOf(false) }
-
-    var viewMode by remember { mutableStateOf("Tareas") }
-
-    var showAddDialog by remember { mutableStateOf(false) }
-    var showNewSubjectDialog by remember { mutableStateOf(false) }
-    var showNoSubjectsWarning by remember { mutableStateOf(false) }
-
     var editingSubject by remember { mutableStateOf<com.example.workminder.data.model.Subject?>(null) }
 
-    // Al entrar a la pantalla, refrescamos datos
     LaunchedEffect(Unit) {
         viewModel.refreshAll()
     }
 
-    // Lista filtrada y ordenada basada en el ViewModel (Reactiva)
     val filteredTasks by remember(query, activeStatusFilter, activeSortBy) {
         derivedStateOf {
             var list: List<com.example.workminder.data.model.Task> = viewModel.tasks.toList()
 
-            // Filtro de búsqueda
             if (query.isNotBlank()) {
                 list = list.filter { 
                     it.title.contains(query, ignoreCase = true) || 
@@ -77,7 +60,6 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                 }
             }
 
-            // Filtro de estado
             list = when (activeStatusFilter) {
                 "Por hacer"  -> list.filter {
                     it.status == com.example.workminder.data.model.TaskStatus.PENDING ||
@@ -89,12 +71,11 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                 else -> list
             }
 
-            // Ordenamiento
             list = when (activeSortBy) {
                 "Importancia"       -> list.sortedByDescending { it.urgency }
                 "Complejidad"       -> list.sortedByDescending { it.complexity }
                 "Materia"           -> list.sortedBy { it.subject_id }
-                else                -> list.sortedBy { it.due_date } // "Fecha de entrega"
+                else                -> list.sortedBy { it.due_date }
             }
             list
         }
@@ -188,8 +169,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
     Scaffold(
         topBar = {
             WorkMinderTopBar(
-                subtitle = "La Agenda de",
-                name = "Usuario", // TODO: Real name
+                name = "Usuario",
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },

@@ -28,7 +28,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var error by mutableStateOf<String?>(null)
 
     init {
-        // Observar la base de datos local y actualizar la lista oficial
         viewModelScope.launch {
             taskRepo.getAllTasks().collect { list ->
                 tasks.clear()
@@ -42,10 +41,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             isLoading = true
             try {
-                // Sincronizar tareas (Remoto -> Local)
                 taskRepo.syncTasks()
 
-                // Materias
                 val sRes = subjectRepo.getSubjects()
                 if (sRes.isSuccessful) {
                     subjects.clear()
@@ -86,7 +83,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 taskRepo.createTask(task)
-                // Programar recordatorios locales
                 scheduler.schedule(task.id, task.title, task.due_date, task.reminders)
                 refreshAll()
             } catch (e: Exception) { error = e.message }
@@ -97,7 +93,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 taskRepo.updateTask(task)
-                // Reprogramar recordatorios (por si cambió fecha o título)
                 scheduler.cancelAll(task.id)
                 scheduler.schedule(task.id, task.title, task.due_date, task.reminders)
                 refreshAll()
@@ -109,7 +104,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 taskRepo.deleteTask(task)
-                // Cancelar recordatorios de la tarea borrada
                 scheduler.cancelAll(task.id)
                 refreshAll()
             } catch (e: Exception) { error = e.message }

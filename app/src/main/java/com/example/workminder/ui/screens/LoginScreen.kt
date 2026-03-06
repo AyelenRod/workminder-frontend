@@ -26,6 +26,7 @@ import com.example.workminder.ui.theme.YellowPrimary
 import com.example.workminder.data.remote.RetrofitClient
 import com.example.workminder.data.remote.AuthManager
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Error
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +82,7 @@ fun LoginScreen(navController: NavController) {
             if (errorMessage != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(androidx.compose.material.icons.Icons.Default.Error, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Error, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(errorMessage!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
                 }

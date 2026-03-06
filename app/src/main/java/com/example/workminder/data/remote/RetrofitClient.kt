@@ -7,18 +7,21 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "https://your-backend-url.com/"
+    // URL para desarrollo local (10.0.2.2 es el localhost del host desde el emulador Android)
+    private const val BASE_URL = "http://10.0.2.2:3000/"
 
-    // Interceptor to add Supabase JWT token
+    // Interceptor to add JWT token
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
+        val token = AuthManager.token
         
-        // TODO: Replace with actual token from Supabase Auth
-        val token = "YOUR_SUPABASE_JWT_TOKEN" 
-        
-        val newRequest = originalRequest.newBuilder()
-            .header("Authorization", "Bearer $token")
-            .build()
+        val newRequest = if (token != null) {
+            originalRequest.newBuilder()
+                .header("Authorization", "Bearer $token")
+                .build()
+        } else {
+            originalRequest
+        }
             
         chain.proceed(newRequest)
     }

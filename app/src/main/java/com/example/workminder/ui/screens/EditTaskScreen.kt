@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.workminder.data.model.MockData
+import com.example.workminder.data.model.Subtask
 import com.example.workminder.ui.components.WorkMinderTopBar
 import com.example.workminder.ui.components.WorkMinderDialog
 import com.example.workminder.ui.navigation.NavRoutes
@@ -34,10 +35,18 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
     var subject     by remember { mutableStateOf(com.example.workminder.data.model.getTaskSubjectName(original.subject_id)) }
     var dueDate     by remember { mutableStateOf(original.due_date) }
     var importance  by remember { mutableStateOf(com.example.workminder.data.model.getTaskUrgency(original.urgency).displayName) }
-    var complexity  by remember { mutableStateOf(original.complexity) }
+    var complexity  by remember { 
+        mutableStateOf(
+            when(original.complexity) {
+                5 -> "Alta"
+                1 -> "Baja"
+                else -> "Media"
+            }
+        ) 
+    }
     var notes       by remember { mutableStateOf(original.notes) }
     val subtasks = remember {
-        val initialList = original.subtasks.map { java.util.UUID.randomUUID().toString() to it }
+        val initialList = original.subtasks.map { it.subtask_id to it.subtask_name }
         mutableStateListOf(*initialList.toTypedArray()).also {
             if (it.isEmpty()) it.add(java.util.UUID.randomUUID().toString() to "")
         }
@@ -245,14 +254,30 @@ fun EditTaskScreen(taskId: String, navController: NavController) {
                         // Buscar ID de materia
                         val subId = MockData.subjects.find { it.subject_name == subject }?.id ?: original.subject_id
 
+                        val complexityValue = when(complexity) {
+                            "Alta" -> 5
+                            "Media" -> 3
+                            "Baja" -> 1
+                            else -> 3
+                        }
+
                         val updated = original.copy(
                             task_title = taskName,
                             due_date = dueDate,
                             urgency = importanceVal,
-                            complexity = complexity,
+                            complexity = complexityValue,
                             notes = notes,
                             subject_id = subId,
-                            subtasks = subtasks.map { it.second }.filter { it.isNotBlank() },
+                            subtasks = subtasks.filter { it.second.isNotBlank() }.map { subPair ->
+                                // Mantener el ID si ya existía, o crear uno nuevo
+                                val existing = original.subtasks.find { it.subtask_id == subPair.first }
+                                Subtask(
+                                    subtask_id = subPair.first,
+                                    task_id = original.id,
+                                    subtask_name = subPair.second,
+                                    is_completed = existing?.is_completed ?: false
+                                )
+                            },
                             reminders = selectedReminders.toList()
                         )
                         

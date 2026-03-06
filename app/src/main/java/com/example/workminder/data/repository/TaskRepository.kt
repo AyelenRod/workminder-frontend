@@ -17,8 +17,10 @@ class TaskRepository(
     suspend fun syncTasks() {
         try {
             val response = apiService.getTasks()
-            if (response.isSuccessful && response.body() != null) {
-                taskDao.insertTasks(response.body()!!)
+            if (response.isSuccessful && response.body()?.success == true) {
+                response.body()?.data?.let { remoteTasks ->
+                    taskDao.insertTasks(remoteTasks)
+                }
             }
         } catch (e: Exception) {
             // Manejar error de red
@@ -30,7 +32,11 @@ class TaskRepository(
         taskDao.insertTask(task)
         try {
             // Intentar enviar al backend
-            apiService.createTask(task)
+            val response = apiService.createTask(task)
+            if (response.isSuccessful && response.body()?.success == true) {
+                // Actualizar con datos del server si es necesario (ej. IDs generados)
+                response.body()?.data?.let { taskDao.insertTask(it) }
+            }
         } catch (e: Exception) {
             // Si falla, se queda en BD local para sincronizar luego
         }

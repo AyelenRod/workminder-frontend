@@ -31,12 +31,7 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
         mutableStateOf(MockData.tasks.find { it.id == taskId } ?: MockData.tasks.first())
     }
 
-    // Subtareas checked (índice → marcado)
-    val checkedSubtasks = remember {
-        mutableStateMapOf<Int, Boolean>().also { map ->
-            task.subtasks.indices.forEach { map[it] = false }
-        }
-    }
+
 
     val urgencyEnum = com.example.workminder.data.model.getTaskUrgency(task.urgency)
     val accentColor = when (urgencyEnum) {
@@ -100,7 +95,12 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                         DetailItem(icon = Icons.Filled.AccessTime, label = "Fecha de entrega:", value = task.dueDate)
                         DetailItem(icon = Icons.Filled.PriorityHigh, label = "Urgencia:", value = urgencyEnum.displayName, valueColor = accentColor)
                         DetailItem(icon = Icons.Filled.TextFormat, label = "Importancia:", value = "Alta", valueColor = UrgentYellow) // Mocked A+ icon equivalent
-                        DetailItem(icon = Icons.Filled.Description, label = "Complejidad:", value = task.complexity, valueColor = UrgentYellow)
+                        val complexityStr = when(task.complexity) {
+                            1 -> "Baja"
+                            5 -> "Alta"
+                            else -> "Media"
+                        }
+                        DetailItem(icon = Icons.Filled.Description, label = "Complejidad:", value = complexityStr, valueColor = UrgentYellow)
                         DetailItem(icon = Icons.Filled.CheckCircleOutline, label = "Estado:", value = task.status.displayName, valueColor = UrgentYellow)
 
                         Divider(modifier = Modifier.padding(vertical = 12.dp), color = NavyText.copy(alpha = 0.2f))
@@ -116,31 +116,36 @@ fun TaskDetailScreen(taskId: String, navController: NavController) {
                             Text("Subtareas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
                             Spacer(modifier = Modifier.height(8.dp))
                             task.subtasks.forEachIndexed { idx, sub ->
-                                val checked = checkedSubtasks[idx] == true
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                        .clickable { checkedSubtasks[idx] = !checked },
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                            .clickable { 
+                                                val updatedSubtasks = task.subtasks.toMutableList()
+                                                updatedSubtasks[idx] = sub.copy(is_completed = !sub.is_completed)
+                                                val updatedTask = task.copy(subtasks = updatedSubtasks)
+                                                MockData.updateTask(updatedTask)
+                                                task = updatedTask
+                                            },
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        Icon(Icons.Filled.SubdirectoryArrowRight, contentDescription = null, tint = if (checked) SaveGreen else TextSecondary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Filled.SubdirectoryArrowRight, contentDescription = null, tint = if (sub.is_completed) SaveGreen else TextSecondary, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = sub,
+                                            text = sub.subtask_name,
                                             style = MaterialTheme.typography.bodyMedium.copy(
-                                                textDecoration = if (checked) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
+                                                textDecoration = if (sub.is_completed) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
                                             ),
-                                            color = if (checked) TextSecondary.copy(alpha = 0.5f) else TextSecondary,
+                                            color = if (sub.is_completed) TextSecondary.copy(alpha = 0.5f) else TextSecondary,
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     }
                                     Icon(
-                                        imageVector = if (checked) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank,
+                                        imageVector = if (sub.is_completed) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank,
                                         contentDescription = null,
-                                        tint = if (checked) SaveGreen else TextSecondary,
+                                        tint = if (sub.is_completed) SaveGreen else TextSecondary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }

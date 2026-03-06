@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.workminder.data.model.MockData
+import com.example.workminder.data.model.Subtask
 import com.example.workminder.ui.components.WorkMinderTopBar
 import com.example.workminder.ui.components.WorkMinderDialog
 import com.example.workminder.ui.navigation.NavRoutes
@@ -280,14 +281,23 @@ fun NewTaskScreen(navController: NavController) {
                             else -> 0.5
                         }
                         
+                        val complexityValue = when(complexity) {
+                            "Alta" -> 5
+                            "Media" -> 3
+                            "Baja" -> 1
+                            else -> 3
+                        }
+                        
                         val newTask = com.example.workminder.data.model.Task(
                             id = taskId,
                             task_title = taskName,
                             due_date = dueDate,
                             urgency = importanceValue,
-                            complexity = complexity,
+                            complexity = complexityValue,
                             notes = notes,
-                            subtasks = subtasks.map { it.second }.filter { it.isNotBlank() },
+                            subtasks = subtasks.filter { it.second.isNotBlank() }.map { 
+                                Subtask(java.util.UUID.randomUUID().toString(), taskId, it.second) 
+                            },
                             reminders = selectedReminders.toList()
                         )
                         MockData.tasks.add(newTask)

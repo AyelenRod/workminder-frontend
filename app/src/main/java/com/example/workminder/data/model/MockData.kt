@@ -19,9 +19,12 @@ object MockData {
             due_date = "01/03/2026",
             status = TaskStatus.PENDING,
             urgency = 0.9,
-            complexity = "Alta",
+            complexity = 5,
             notes = "Entregar antes del viernes.",
-            subtasks = listOf("Redactar introducción", "Agregar diagramas")
+            subtasks = listOf(
+                Subtask("s1", "1", "Redactar introducción"),
+                Subtask("s2", "1", "Agregar diagramas")
+            )
         ),
         Task(
             id = "2",
@@ -30,8 +33,11 @@ object MockData {
             due_date = "01/03/2026",
             status = TaskStatus.IN_PROGRESS,
             urgency = 0.5,
-            complexity = "Media",
-            subtasks = listOf("Pantalla de login", "Pantalla de dashboard")
+            complexity = 3,
+            subtasks = listOf(
+                Subtask("s3", "2", "Pantalla de login"),
+                Subtask("s4", "2", "Pantalla de dashboard")
+            )
         ),
         Task(
             id = "3",
@@ -40,7 +46,7 @@ object MockData {
             due_date = "01/03/2026",
             status = TaskStatus.IN_PROGRESS,
             urgency = 0.2,
-            complexity = "Baja",
+            complexity = 1,
             notes = "Usar plantilla corporativa."
         ),
         Task(
@@ -50,7 +56,7 @@ object MockData {
             due_date = "05/03/2026",
             status = TaskStatus.PENDING,
             urgency = 0.5,
-            complexity = "Media"
+            complexity = 3
         ),
         Task(
             id = "5",
@@ -59,7 +65,7 @@ object MockData {
             due_date = "08/03/2026",
             status = TaskStatus.PENDING,
             urgency = 0.8,
-            complexity = "Alta"
+            complexity = 5
         ),
         Task(
             id = "6",
@@ -68,7 +74,7 @@ object MockData {
             due_date = "12/03/2026",
             status = TaskStatus.PENDING,
             urgency = 0.3,
-            complexity = "Baja"
+            complexity = 1
         ),
         Task(
             id = "7",
@@ -77,7 +83,7 @@ object MockData {
             due_date = "15/03/2026",
             status = TaskStatus.PENDING,
             urgency = 0.6,
-            complexity = "Alta"
+            complexity = 5
         )
     )
 

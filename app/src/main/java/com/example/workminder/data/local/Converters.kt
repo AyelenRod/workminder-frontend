@@ -1,12 +1,24 @@
 package com.example.workminder.data.local
 
 import androidx.room.TypeConverter
+import com.example.workminder.data.model.Subtask
 import com.example.workminder.data.model.TaskStatus
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 class Converters {
     private val gson = Gson()
+
+    @TypeConverter
+    fun fromSubtaskList(value: List<Subtask>?): String {
+        return gson.toJson(value)
+    }
+
+    @TypeConverter
+    fun toSubtaskList(value: String): List<Subtask> {
+        val listType = object : TypeToken<List<Subtask>>() {}.type
+        return gson.fromJson(value, listType) ?: emptyList()
+    }
 
     @TypeConverter
     fun fromStringList(value: List<String>?): String {

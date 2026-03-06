@@ -12,10 +12,11 @@ data class Task(
     @SerializedName("urgency") val urgency: Double,
     @SerializedName("completed_at") val completed_at: String? = null,
     @SerializedName("subject_id") val subject_id: String? = null,
-    var status: TaskStatus = TaskStatus.PENDING,
-    val complexity: String = "Media",
-    var notes: String = "",
-    val subtasks: List<String> = emptyList(),
+    @SerializedName("task_status") var status: TaskStatus = TaskStatus.PENDING,
+    @SerializedName("complexity") val complexity: Int = 3,
+    @SerializedName("extra_note") var notes: String = "",
+    @SerializedName("importance") val importance: Int = 3,
+    val subtasks: List<Subtask> = emptyList(),
     val reminders: List<Int> = emptyList()
 ) {
     val title: String get() = task_title

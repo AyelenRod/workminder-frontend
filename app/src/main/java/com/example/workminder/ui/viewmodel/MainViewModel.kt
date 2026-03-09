@@ -30,8 +30,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     init {
         viewModelScope.launch {
             taskRepo.getAllTasks().collect { list ->
+                val today = java.time.LocalDate.now()
+                val validTasks = mutableListOf<Task>()
+                
+                for (task in list) {
+                    var shouldDelete = false
+                    var shouldUpdate = false
+                    
+                    if (task.status == com.example.workminder.data.model.TaskStatus.DONE && task.completed_at != null) {
+                        try {
+                            val compDate = java.time.LocalDateTime.parse(task.completed_at, java.time.format.DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
+                            if (java.time.temporal.ChronoUnit.DAYS.between(compDate, today) > 7) {
+                                shouldDelete = true
+                            }
+                        } catch(e: Exception) {}
+                    } else if (task.status == com.example.workminder.data.model.TaskStatus.PENDING) {
+                        try {
+                            val due = java.time.LocalDate.parse(task.due_date.split("T")[0], java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+                            if (due.isBefore(today)) {
+                                shouldUpdate = true
+                            }
+                        } catch(e: Exception) {}
+                    }
+                    
+                    if (shouldDelete) {
+                        deleteTask(task)
+                    } else if (shouldUpdate) {
+                        updateTask(task.copy(status = com.example.workminder.data.model.TaskStatus.LATE))
+                        validTasks.add(task.copy(status = com.example.workminder.data.model.TaskStatus.LATE))
+                    } else {
+                        validTasks.add(task)
+                    }
+                }
+                
                 tasks.clear()
-                tasks.addAll(list)
+                tasks.addAll(validTasks)
             }
         }
         refreshAll()

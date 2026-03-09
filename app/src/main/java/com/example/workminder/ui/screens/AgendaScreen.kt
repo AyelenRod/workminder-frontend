@@ -42,75 +42,76 @@ import com.example.workminder.data.model.Subject
 fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewModel()) {
     var query by remember { mutableStateOf("") }
     var showFilter by remember { mutableStateOf(false) }
-    var activeStatusFilter by remember { mutableStateOf("Por hacer") }
-    var activeSortBy by remember { mutableStateOf("Fecha de entrega") }
-
-    var thisWeekExpanded by remember { mutableStateOf(true) }
-    var nextWeekExpanded by remember { mutableStateOf(false) }
-    var laterExpanded by remember { mutableStateOf(false) }
+    var activeStatusFilter by remember { mutableStateOf("Pendientes") }
+    var activeGroupBy by remember { mutableStateOf("Urgencia") }
 
     var viewMode by remember { mutableStateOf("Tareas") }
-
     var showAddDialog by remember { mutableStateOf(false) }
     var showNewSubjectDialog by remember { mutableStateOf(false) }
-    var showNoSubjectsWarning by remember { mutableStateOf(false) }
-
     var editingSubject by remember { mutableStateOf<com.example.workminder.data.model.Subject?>(null) }
+
+    val expandedGroups = remember { mutableStateMapOf<String, Boolean>() }
 
     LaunchedEffect(Unit) {
         viewModel.refreshAll()
     }
 
-    val filteredTasks by remember(query, activeStatusFilter, activeSortBy) {
-        derivedStateOf {
-            var list: List<com.example.workminder.data.model.Task> = viewModel.tasks.toList()
+    val filteredTasks = remember(viewModel.tasks.size, query, activeStatusFilter, activeGroupBy) {
+        var list = viewModel.tasks.toList()
 
-            if (query.isNotBlank()) {
-                list = list.filter { 
-                    it.title.contains(query, ignoreCase = true) || 
-                    it.notes.contains(query, ignoreCase = true)
+        // Búsqueda
+        if (query.isNotBlank()) {
+            list = list.filter { 
+                it.title.contains(query, ignoreCase = true) || 
+                viewModel.subjects.find { s -> s.id == it.subject_id }?.subject_name?.contains(query, ignoreCase = true) == true
+            }
+        }
+
+        // Filtro de estatus
+        list = when (activeStatusFilter) {
+            "Pendientes" -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.PENDING }
+            "Atrasadas"  -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.LATE }.sortedByDescending { it.due_date }
+            "Completadas" -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.DONE }.sortedByDescending { it.completed_at }
+            else -> list
+        }
+        list
+    }
+
+    val groupedTasks = remember(filteredTasks, activeGroupBy, activeStatusFilter) {
+        if (activeStatusFilter == "Completadas" || activeStatusFilter == "Atrasadas") {
+            null // No agrupar
+        } else {
+            when (activeGroupBy) {
+                "Urgencia" -> filteredTasks.groupBy { com.example.workminder.data.model.getUrgencyLevel(it.urgency).displayName }
+                "Importancia" -> filteredTasks.groupBy { com.example.workminder.data.model.TaskLevel.fromInt(it.importance).displayName }
+                "Complejidad" -> filteredTasks.groupBy { com.example.workminder.data.model.TaskLevel.fromInt(it.complexity).displayName }
+                "Fecha de entrega" -> {
+                    val now = java.time.LocalDate.now()
+                    val nextWeek = now.plusDays(7)
+                    filteredTasks.groupBy { task ->
+                        try {
+                            val date = java.time.LocalDate.parse(task.due_date)
+                            when {
+                                !date.isAfter(nextWeek) -> "Esta semana"
+                                !date.isAfter(now.plusDays(14)) -> "Siguiente semana"
+                                else -> "Posteriores"
+                            }
+                        } catch (e: Exception) { "Posteriores" }
+                    }
                 }
+                else -> null
             }
-
-            list = when (activeStatusFilter) {
-                "Por hacer"  -> list.filter {
-                    it.status == com.example.workminder.data.model.TaskStatus.PENDING ||
-                    it.status == com.example.workminder.data.model.TaskStatus.IN_PROGRESS ||
-                    it.status == com.example.workminder.data.model.TaskStatus.LATE
-                }
-                "Atrasadas"  -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.LATE }
-                "Terminadas" -> list.filter { it.status == com.example.workminder.data.model.TaskStatus.DONE }
-                else -> list
-            }
-
-            list = when (activeSortBy) {
-                "Importancia"       -> list.sortedByDescending { it.urgency }
-                "Complejidad"       -> list.sortedByDescending { it.complexity }
-                "Materia"           -> list.sortedBy { it.subject_id }
-                else                -> list.sortedBy { it.due_date }
-            }
-            list
         }
     }
 
     if (showFilter) {
         FilterDialog(
             onDismiss = { showFilter = false },
-            onApply   = { sortBy, filter ->
-                activeSortBy       = sortBy
+            onApply   = { groupBy, filter ->
+                activeGroupBy      = groupBy
                 activeStatusFilter = filter
                 showFilter         = false
             }
-        )
-    }
-
-    if (showNoSubjectsWarning) {
-        WorkMinderDialog(
-            onDismissRequest = { showNoSubjectsWarning = false },
-            title = "Atención",
-            message = "Debes tener registrada por lo menos una materia antes de agregar una tarea.",
-            confirmText = "Entendido",
-            onConfirm = { showNoSubjectsWarning = false }
         )
     }
 
@@ -139,40 +140,21 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                     modifier = Modifier.fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "¿Qué deseas agregar?",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = NavyText
-                    )
+                    Text(text = "¿Qué deseas agregar?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = NavyText)
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = {
-                            showAddDialog = false
-                            if (viewModel.subjects.isEmpty()) {
-                                showNewSubjectDialog = true // Directo a crear materia
-                            } else {
-                                navController.navigate(NavRoutes.NewTask.route)
-                            }
-                        },
+                        onClick = { showAddDialog = false; navController.navigate(NavRoutes.NewTask.route) },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText)
-                    ) {
-                        Text("Nueva tarea", fontWeight = FontWeight.Bold)
-                    }
+                    ) { Text("Nueva tarea", fontWeight = FontWeight.Bold) }
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
-                        onClick = {
-                            showAddDialog = false
-                            showNewSubjectDialog = true
-                        },
+                        onClick = { showAddDialog = false; showNewSubjectDialog = true },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = NavyText)
-                    ) {
-                        Text("Nueva materia", fontWeight = FontWeight.Bold)
-                    }
+                    ) { Text("Nueva materia", fontWeight = FontWeight.Bold) }
                 }
             }
         }
@@ -180,262 +162,101 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
 
     Scaffold(
         topBar = {
-            WorkMinderTopBar(
-                subtitle = "La Agenda de",
-                name = "Usuario",
-                onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
-            )
+            WorkMinderTopBar(subtitle = "La Agenda de", name = "Usuario", onSettingsClick = { navController.navigate(NavRoutes.Settings.route) })
         },
         bottomBar = { BottomNavBar(navController = navController) },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = YellowPrimary,
-                contentColor = NavyText,
-                shape = RoundedCornerShape(14.dp)
-            ) {
+            FloatingActionButton(onClick = { showAddDialog = true }, containerColor = YellowPrimary, contentColor = NavyText, shape = RoundedCornerShape(14.dp)) {
                 Icon(Icons.Filled.Add, contentDescription = "Agregar")
             }
         },
         containerColor = BackgroundGray
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
                 Spacer(modifier = Modifier.height(12.dp))
-                // Search bar + filter button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        placeholder = { Text("Buscar...", color = TextSecondary) },
-                        leadingIcon = {
-                            Icon(Icons.Filled.Search, contentDescription = null, tint = TextSecondary)
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(24.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = YellowPrimary,
-                            unfocusedBorderColor = TextSecondary,
-                            unfocusedContainerColor = Color.White,
-                            focusedContainerColor = Color.White
-                        )
+                        value = query, onValueChange = { query = it }, placeholder = { Text("Buscar por nombre o materia...", color = TextSecondary) },
+                        leadingIcon = { Icon(Icons.Filled.Search, null, tint = TextSecondary) },
+                        modifier = Modifier.weight(1f), shape = RoundedCornerShape(24.dp), singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = YellowPrimary, unfocusedBorderColor = TextSecondary, unfocusedContainerColor = Color.White, focusedContainerColor = Color.White)
                     )
-                    
                     if (viewMode == "Tareas") {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { showFilter = true },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = YellowPrimary,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Tune,
-                                        contentDescription = "Filtros",
-                                        tint = NavyText
-                                    )
-                                }
+                        Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).clickable { showFilter = true }, contentAlignment = Alignment.Center) {
+                            Surface(shape = RoundedCornerShape(12.dp), color = YellowPrimary, modifier = Modifier.fillMaxSize()) {
+                                Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Tune, null, tint = NavyText) }
                             }
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // View Mode Toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
                         onClick = { viewMode = "Tareas" },
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp),
                         border = BorderStroke(1.dp, if (viewMode == "Tareas") YellowPrimary else TextSecondary),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = if (viewMode == "Tareas") YellowPrimary.copy(alpha=0.1f) else Color.Transparent,
-                            contentColor = if (viewMode == "Tareas") NavyText else TextSecondary
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Tareas", fontWeight = if (viewMode == "Tareas") FontWeight.Bold else FontWeight.Normal)
-                    }
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = if (viewMode == "Tareas") YellowPrimary.copy(alpha=0.1f) else Color.Transparent, contentColor = if (viewMode == "Tareas") NavyText else TextSecondary)
+                    ) { Text("Tareas", fontWeight = if (viewMode == "Tareas") FontWeight.Bold else FontWeight.Normal) }
                     OutlinedButton(
                         onClick = { viewMode = "Materias" },
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp),
                         border = BorderStroke(1.dp, if (viewMode == "Materias") YellowPrimary else TextSecondary),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = if (viewMode == "Materias") YellowPrimary.copy(alpha=0.1f) else Color.Transparent,
-                            contentColor = if (viewMode == "Materias") NavyText else TextSecondary
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Materias", fontWeight = if (viewMode == "Materias") FontWeight.Bold else FontWeight.Normal)
-                    }
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = if (viewMode == "Materias") YellowPrimary.copy(alpha=0.1f) else Color.Transparent, contentColor = if (viewMode == "Materias") NavyText else TextSecondary)
+                    ) { Text("Materias", fontWeight = if (viewMode == "Materias") FontWeight.Bold else FontWeight.Normal) }
                 }
             }
 
             if (viewMode == "Tareas") {
-                if (query.isNotBlank() || activeStatusFilter != "Todos") {
-                    // Modo búsqueda/filtro: lista plana sin agrupar
-                    item {
-                        if (filteredTasks.isEmpty()) {
-                            Text(
-                                "No se encontraron tareas.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary,
-                                modifier = androidx.compose.ui.Modifier.padding(top = 24.dp)
+                if (groupedTasks != null) {
+                    groupedTasks.forEach { (label, tasks) ->
+                        val isExpanded = expandedGroups[label] ?: true
+                        item {
+                            TaskGroup(
+                                label = label,
+                                count = tasks.size,
+                                expanded = isExpanded,
+                                onToggle = { expandedGroups[label] = !isExpanded }
                             )
                         }
+                        if (isExpanded) {
+                            items(tasks) { task ->
+                                val subj = viewModel.subjects.find { it.id == task.subject_id }
+                                TaskCard(
+                                    task = task,
+                                    subjectName = subj?.subject_name ?: "Sin materia",
+                                    subjectColor = subj?.color ?: "#808080",
+                                    onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
+                                    onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
+                                )
+                            }
+                        }
                     }
+                } else {
                     items(filteredTasks) { task ->
                         val subj = viewModel.subjects.find { it.id == task.subject_id }
                         TaskCard(
                             task = task,
                             subjectName = subj?.subject_name ?: "Sin materia",
                             subjectColor = subj?.color ?: "#808080",
-                            modifier = androidx.compose.ui.Modifier.padding(bottom = 8.dp),
                             onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
                             onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                         )
                     }
-                    item { Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp)) }
-                } else {
-                    // Modo normal agrupado
-                    val thisWeek  = filteredTasks.take(3)
-                    val nextWeek  = filteredTasks.drop(3).take(2)
-                    val laterList = filteredTasks.drop(5)
-
-                    // Esta semana
-                    item {
-                        TaskGroup(
-                            label    = "Esta semana",
-                            count    = thisWeek.size,
-                            expanded = thisWeekExpanded,
-                            onToggle = { thisWeekExpanded = !thisWeekExpanded }
-                        )
-                    }
-                    item {
-                        AnimatedVisibility(visible = thisWeekExpanded) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
-                                for (task in thisWeek) {
-                                    val subj = viewModel.subjects.find { it.id == task.subject_id }
-                                    TaskCard(
-                                        task = task,
-                                        subjectName = subj?.subject_name ?: "Sin materia",
-                                        subjectColor = subj?.color ?: "#808080",
-                                        onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
-                                        onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
-                                    )
-                                }
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
-                            }
-                        }
-                    }
-
-                    // Siguiente semana
-                    item {
-                        TaskGroup(
-                            label    = "Siguiente semana",
-                            count    = nextWeek.size,
-                            expanded = nextWeekExpanded,
-                            onToggle = { nextWeekExpanded = !nextWeekExpanded }
-                        )
-                    }
-                    item {
-                        AnimatedVisibility(visible = nextWeekExpanded) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
-                                for (task in nextWeek) {
-                                    val subj = viewModel.subjects.find { it.id == task.subject_id }
-                                    TaskCard(
-                                        task = task,
-                                        subjectName = subj?.subject_name ?: "Sin materia",
-                                        subjectColor = subj?.color ?: "#808080",
-                                        onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
-                                        onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
-                                    )
-                                }
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
-                            }
-                        }
-                    }
-
-                    // Más tarde
-                    item {
-                        TaskGroup(
-                            label    = "Más tarde",
-                            count    = laterList.size,
-                            expanded = laterExpanded,
-                            onToggle = { laterExpanded = !laterExpanded }
-                        )
-                    }
-                    item {
-                        AnimatedVisibility(visible = laterExpanded) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
-                                for (task in laterList) {
-                                    val subj = viewModel.subjects.find { it.id == task.subject_id }
-                                    TaskCard(
-                                        task = task,
-                                        subjectName = subj?.subject_name ?: "Sin materia",
-                                        subjectColor = subj?.color ?: "#808080",
-                                        modifier = Modifier.padding(bottom = 10.dp),
-                                        onClick = {
-                                            navController.navigate(NavRoutes.TaskDetail.createRoute(task.id))
-                                        },
-                                        onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
-                                    )
-                                }
-                                Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
-                            }
-                        }
-                        Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
-                    }
                 }
             } else {
-                // Materias Mode
-                item {
-                    Text(
-                        text = "Mis Materias",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = NavyText,
-                        modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
-                    )
-                }
                 items(viewModel.subjects) { subject ->
                     SubjectCard(
                         subject = subject,
-                        modifier = Modifier.padding(bottom = 10.dp),
-                        onEditClick = {
-                            editingSubject = subject
-                        },
-                        onDeleteClick = {
-                            viewModel.deleteSubject(subject.id)
-                        }
+                        onEditClick = { editingSubject = subject },
+                        onDeleteClick = { viewModel.deleteSubject(subject.id) }
                     )
                 }
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
             }
+            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }

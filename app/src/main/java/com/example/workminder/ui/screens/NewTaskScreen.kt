@@ -34,26 +34,23 @@ import com.example.workminder.ui.theme.*
 fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewModel()) {
     val context = LocalContext.current
     var taskName    by remember { mutableStateOf("") }
-    var selectedSubjectId by remember { mutableStateOf("") }
-    var selectedSubjectName by remember { mutableStateOf("") }
+    var selectedSubjectId by remember { mutableStateOf("none") }
+    var selectedSubjectName by remember { mutableStateOf("Sin materia") }
     var dueDate     by remember { mutableStateOf("") }
-    var importance  by remember { mutableStateOf("") }
-    var complexity  by remember { mutableStateOf("") }
+    var importance  by remember { mutableStateOf("Media") }
+    var complexity  by remember { mutableStateOf("Media") }
     var notes       by remember { mutableStateOf("") }
     val subtasks    = remember { mutableStateListOf(java.util.UUID.randomUUID().toString() to "") }
-    val selectedReminders = remember { mutableStateListOf<Int>() }
+    val selectedReminders = remember { mutableStateListOf<String>() }
 
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
     var subjectExpanded by remember { mutableStateOf(false) }
 
     var showValidationError by remember { mutableStateOf(false) }
+    var validationMessage by remember { mutableStateOf("") }
 
-    val importances = listOf("Muy urgente", "Algo urgente", "Muy poco urgente")
-    val complexities= listOf("Alta", "Media", "Baja")
-    val reminderOptions = listOf(0, 1, 2, 3) // 0 es el día actual, 1 día antes, etc.
-    val reminderLabels = mapOf(0 to "Hoy", 1 to "1 día antes", 2 to "2 días antes", 3 to "3 días antes")
-
+    val levels = com.example.workminder.data.model.TaskLevel.entries.map { it.displayName }.reversed()
 
     Scaffold(
         topBar = {
@@ -68,8 +65,8 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
         if (showValidationError) {
             WorkMinderDialog(
                 onDismissRequest = { showValidationError = false },
-                title = "Faltan datos",
-                message = "Por favor, completa todos los campos obligatorios para crear la tarea.",
+                title = "Atención",
+                message = validationMessage,
                 confirmText = "Entendido",
                 onConfirm = { showValidationError = false }
             )
@@ -104,7 +101,7 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
             FormLabel("Nombre de la tarea")
             OutlinedTextField(
                 value = taskName,
-                onValueChange = { taskName = it },
+                onValueChange = { if (it.length <= 100) taskName = it },
                 placeholder = { Text("Escribe el nombre...", color = TextSecondary) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -123,6 +120,11 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                     modifier = Modifier.fillMaxWidth().menuAnchor(), shape = RoundedCornerShape(8.dp), colors = fieldColors()
                 )
                 ExposedDropdownMenu(expanded = subjectExpanded, onDismissRequest = { subjectExpanded = false }) {
+                    DropdownMenuItem(text = { Text("Sin materia") }, onClick = { 
+                        selectedSubjectName = "Sin materia"
+                        selectedSubjectId = "none"
+                        subjectExpanded = false 
+                    })
                     viewModel.subjects.forEach { subj -> 
                         DropdownMenuItem(text = { Text(subj.subject_name) }, onClick = { 
                             selectedSubjectName = subj.subject_name
@@ -141,7 +143,6 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                 android.app.DatePickerDialog(
                     context,
                     { _, year, month, dayOfMonth ->
-                        // Formato YYYY-MM-DD
                         dueDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
                     },
                     calendar.get(java.util.Calendar.YEAR),
@@ -183,7 +184,7 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                     colors = fieldColors()
                 )
                 ExposedDropdownMenu(expanded = importanceExpanded, onDismissRequest = { importanceExpanded = false }) {
-                    importances.forEach { opt ->
+                    levels.forEach { opt ->
                         DropdownMenuItem(text = { Text(opt) }, onClick = { importance = opt; importanceExpanded = false })
                     }
                 }
@@ -204,7 +205,7 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                     colors = fieldColors()
                 )
                 ExposedDropdownMenu(expanded = complexityExpanded, onDismissRequest = { complexityExpanded = false }) {
-                    complexities.forEach { opt ->
+                    levels.forEach { opt ->
                         DropdownMenuItem(text = { Text(opt) }, onClick = { complexity = opt; complexityExpanded = false })
                     }
                 }
@@ -212,10 +213,10 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            FormLabel("Notas extra")
+            FormLabel("Notas extra (${notes.length}/200)")
             OutlinedTextField(
                 value = notes,
-                onValueChange = { notes = it },
+                onValueChange = { if (it.length <= 200) notes = it },
                 placeholder = { Text("Opcional", color = TextSecondary) },
                 modifier = Modifier.fillMaxWidth().height(100.dp),
                 shape = RoundedCornerShape(8.dp),
@@ -262,69 +263,80 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
             Spacer(modifier = Modifier.height(24.dp))
 
             FormLabel("Recordatorios")
-            FlowRow(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                reminderOptions.forEach { days ->
-                    val isSelected = selectedReminders.contains(days)
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            if (isSelected) selectedReminders.remove(days) else selectedReminders.add(days)
-                        },
-                        label = { Text(reminderLabels[days] ?: "${days}d") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = YellowPrimary,
-                            selectedLabelColor = NavyText,
-                            labelColor = TextSecondary
-                        )
-                    )
+            selectedReminders.forEachIndexed { index, dateStr ->
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(dateStr, color = NavyText, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { selectedReminders.removeAt(index) }) {
+                        Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    val cal = java.util.Calendar.getInstance()
+                    android.app.DatePickerDialog(context, { _, y, m, d ->
+                        android.app.TimePickerDialog(context, { _, hh, mm ->
+                            val fullDateStr = String.format("%04d-%02d-%02d %02d:%02d", y, m + 1, d, hh, mm)
+                            // Validar fechas de recordatorio
+                            try {
+                                val now = java.time.LocalDateTime.now()
+                                val selectedDate = java.time.LocalDateTime.of(y, m+1, d, hh, mm)
+                                
+                                if (dueDate.isNotBlank()) {
+                                    val deadline = java.time.LocalDate.parse(dueDate).atTime(23, 59)
+                                    if (selectedDate.isBefore(now)) {
+                                        validationMessage = "El recordatorio no puede ser en el pasado."
+                                        showValidationError = true
+                                    } else if (selectedDate.isAfter(deadline)) {
+                                        validationMessage = "El recordatorio no puede ser después de la fecha de entrega."
+                                        showValidationError = true
+                                    } else {
+                                        selectedReminders.add(fullDateStr)
+                                    }
+                                } else {
+                                    validationMessage = "Indica primero la fecha de entrega."
+                                    showValidationError = true
+                                }
+                            } catch (e: Exception) {
+                                selectedReminders.add(fullDateStr)
+                            }
+                        }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
+                    }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
+                },
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText)
+            ) {
+                Text("Añadir recordatorio", fontWeight = FontWeight.SemiBold)
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = { 
-                    if (taskName.isBlank() || selectedSubjectId.isNullOrBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
+                    if (taskName.isBlank() || dueDate.isBlank() || importance.isBlank() || complexity.isBlank()) {
+                        validationMessage = "Por favor, completa todos los campos obligatorios."
                         showValidationError = true
                     } else {
                         val taskId = java.util.UUID.randomUUID().toString()
+                        val levelImp = com.example.workminder.data.model.TaskLevel.fromDisplayName(importance)
+                        val levelComp = com.example.workminder.data.model.TaskLevel.fromDisplayName(complexity)
                         
-                        val importanceValue = when(importance) {
-                            "Muy urgente" -> 0.9
-                            "Algo urgente" -> 0.5
-                            "Muy poco urgente" -> 0.2
-                            else -> 0.5
-                        }
-                        
-                        val complexityValue = when(complexity) {
-                            "Alta" -> 5
-                            "Media" -> 3
-                            "Baja" -> 1
-                            else -> 3
-                        }
-                        
-                        val importanceInt = when(importance) {
-                            "Muy urgente" -> 5
-                            "Algo urgente" -> 3
-                            "Muy poco urgente" -> 1
-                            else -> 3
-                        }
+                        val urgencyCalculated = com.example.workminder.data.model.calculateUrgency(
+                            levelImp.value, levelComp.value, dueDate
+                        )
                         
                         val newTask = com.example.workminder.data.model.Task(
                             id = taskId,
                             task_title = taskName,
                             due_date = dueDate,
-                            urgency = importanceValue,
-                            importance = importanceInt,
-                            complexity = complexityValue,
+                            urgency = urgencyCalculated,
+                            importance = levelImp.value,
+                            complexity = levelComp.value,
                             notes = notes,
-                            subject_id = selectedSubjectId,
+                            subject_id = if (selectedSubjectId == "none") null else selectedSubjectId,
                             subtasks = subtasks.filter { it.second.isNotBlank() }.map { 
-                                Subtask(java.util.UUID.randomUUID().toString(), taskId, it.second) 
+                                com.example.workminder.data.model.Subtask(java.util.UUID.randomUUID().toString(), taskId, it.second) 
                             },
                             reminders = selectedReminders.toList()
                         )
@@ -338,6 +350,11 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
             ) {
                 Text("Guardar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
 
             Spacer(modifier = Modifier.height(32.dp))
         }

@@ -19,6 +19,14 @@ class AuthViewModel : ViewModel() {
             errorMessage = "Por favor completa todos los campos"
             return
         }
+        if (pass.length < 8) {
+            errorMessage = "La contraseña debe tener al menos 8 caracteres"
+            return
+        }
+        if (pass.contains(" ")) {
+            errorMessage = "La contraseña no debe contener espacios"
+            return
+        }
         if (pass != confirmPass) {
             errorMessage = "Las contraseñas no coinciden"
             return

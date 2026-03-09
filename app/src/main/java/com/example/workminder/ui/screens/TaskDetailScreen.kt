@@ -30,17 +30,12 @@ import com.example.workminder.ui.viewmodel.MainViewModel
 @Composable
 fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: MainViewModel = viewModel()) {
     val task = viewModel.tasks.find { it.id == taskId } ?: run {
-        // Si no se encuentra, volver atrás o mostrar error
         LaunchedEffect(Unit) { navController.popBackStack() }
         return
     }
 
-    val urgencyEnum = com.example.workminder.data.model.getTaskUrgency(task.urgency)
-    val accentColor = when (urgencyEnum) {
-        com.example.workminder.data.model.TaskUrgency.HIGH   -> UrgentRed
-        com.example.workminder.data.model.TaskUrgency.MEDIUM -> UrgentYellow
-        com.example.workminder.data.model.TaskUrgency.LOW    -> UrgentCyan
-    }
+    val urgencyInfo = com.example.workminder.data.model.getUrgencyLevel(task.urgency)
+    val accentColor = com.example.workminder.data.model.getUrgencyColor(task.urgency)
 
     Scaffold(
         topBar = {
@@ -61,7 +56,6 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Back button row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Regresar", tint = NavyText)
@@ -76,7 +70,6 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Main Card (Design with left border)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -85,53 +78,64 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    // Left color bar
-                    Box(modifier = Modifier.width(6.dp).height(550.dp).background(accentColor))
+                    Box(modifier = Modifier.width(6.dp).height(intrinsicSize = IntrinsicSize.Max).background(accentColor))
                     
                     Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
-                        Text(text = task.title, style = MaterialTheme.typography.headlineMedium, color = NavyText, fontWeight = FontWeight.Bold)
+                        Text(text = task.task_title, style = MaterialTheme.typography.headlineMedium, color = NavyText, fontWeight = FontWeight.Bold)
                         Text(text = viewModel.subjects.find { it.id == task.subject_id }?.subject_name ?: "Sin materia", style = MaterialTheme.typography.titleMedium, color = NavyText, fontWeight = FontWeight.SemiBold)
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        DetailItem(icon = Icons.Filled.AccessTime, label = "Fecha de entrega:", value = task.displayDate)
-                        DetailItem(icon = Icons.Filled.PriorityHigh, label = "Urgencia:", value = urgencyEnum.displayName, valueColor = UrgentRed)
-                        DetailItem(icon = Icons.Filled.TextFormat, label = "Importancia:", value = "Alta", valueColor = UrgentYellow) 
-                        val complexityStr = when(task.complexity) {
-                            1 -> "Baja"
-                            5 -> "Alta"
-                            else -> "Media"
-                        }
-                        DetailItem(icon = Icons.Filled.Description, label = "Complejidad:", value = complexityStr, valueColor = UrgentYellow)
-                        DetailItem(icon = Icons.Filled.CheckCircleOutline, label = "Estado:", value = task.status?.displayName ?: "Pendiente", valueColor = UrgentYellow)
+                        DetailItem(icon = Icons.Filled.AccessTime, label = "Fecha de entrega:", value = task.due_date)
+                        DetailItem(icon = Icons.Filled.PriorityHigh, label = "Urgencia:", value = urgencyInfo.displayName, valueColor = accentColor)
+                        DetailItem(
+                            icon = Icons.Filled.TextFormat, 
+                            label = "Importancia:", 
+                            value = com.example.workminder.data.model.TaskLevel.fromInt(task.importance).displayName
+                        ) 
+                        DetailItem(
+                            icon = Icons.Filled.Description, 
+                            label = "Complejidad:", 
+                            value = com.example.workminder.data.model.TaskLevel.fromInt(task.complexity).displayName
+                        )
+                        DetailItem(
+                            icon = Icons.Filled.CheckCircleOutline, 
+                            label = "Estado:", 
+                            value = task.status.displayName, 
+                            valueColor = when(task.status) {
+                                com.example.workminder.data.model.TaskStatus.DONE -> SaveGreen
+                                com.example.workminder.data.model.TaskStatus.LATE -> Level5Red
+                                else -> Level4Orange
+                            }
+                        )
 
-                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
+                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = accentColor.copy(alpha = 0.3f))
 
                         if (task.notes.isNotBlank()) {
                             Text("Notas extra", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(text = task.notes, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
+                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = accentColor.copy(alpha = 0.3f))
                         }
 
                         if (task.subtasks.isNotEmpty()) {
                             Text("Subtareas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
                             Spacer(modifier = Modifier.height(8.dp))
                             task.subtasks.forEachIndexed { idx, sub ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp)
-                                            .clickable { 
-                                                val updatedSubtasks = task.subtasks.toMutableList()
-                                                updatedSubtasks[idx] = sub.copy(is_completed = !sub.is_completed)
-                                                viewModel.updateTask(task.copy(subtasks = updatedSubtasks))
-                                            },
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clickable { 
+                                            val updatedSubtasks = task.subtasks.toMutableList()
+                                            updatedSubtasks[idx] = sub.copy(is_completed = !sub.is_completed)
+                                            viewModel.updateTask(task.copy(subtasks = updatedSubtasks))
+                                        },
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        Icon(Icons.Filled.SubdirectoryArrowRight, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Filled.SubdirectoryArrowRight, null, tint = TextSecondary, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = sub.subtask_name,
@@ -150,83 +154,99 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
                                     )
                                 }
                             }
-                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
+                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = accentColor.copy(alpha = 0.3f))
                         }
 
-                        // Recordatorios
-                        Text("Recordatorios", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            border = BorderStroke(1.dp, NavyText.copy(alpha = 0.5f)),
-                            color = Color.White
-                        ) {
-                            Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.Notifications, contentDescription = null, tint = NavyText, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("1 día antes, 10:00 PM", style = MaterialTheme.typography.bodySmall, color = NavyText, fontWeight = FontWeight.SemiBold)
+                        if (task.reminders.isNotEmpty()) {
+                            Text("Recordatorios", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            task.reminders.forEach { reminder ->
+                                Surface(
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    border = BorderStroke(1.dp, NavyText.copy(alpha = 0.3f)),
+                                    color = Color.White
+                                ) {
+                                    Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Notifications, null, tint = NavyText, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(reminder, style = MaterialTheme.typography.bodySmall, color = NavyText, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
                             }
+                            Divider(modifier = Modifier.padding(vertical = 12.dp), color = accentColor.copy(alpha = 0.3f))
                         }
                         
-                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
-
-                        // Marcar como
-                        Text("Marcar como", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
+                        // Action buttons
+                        Text("Acciones", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = NavyText)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            OutlinedButton(
-                                onClick = {
-                                    viewModel.updateTask(task.copy(status = com.example.workminder.data.model.TaskStatus.DONE))
-                                },
-                                modifier = Modifier.weight(1f).height(44.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(2.dp, SaveGreen),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = SaveGreen)
-                            ) {
-                                Text("Completada", fontWeight = FontWeight.Bold)
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    if (task.status != com.example.workminder.data.model.TaskStatus.DONE) {
-                                        viewModel.updateTask(task.copy(status = com.example.workminder.data.model.TaskStatus.IN_PROGRESS))
-                                    }
-                                },
-                                modifier = Modifier.weight(1f).height(44.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(2.dp, YellowPrimary),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = YellowPrimary)
-                            ) {
-                                Text("En progreso", fontWeight = FontWeight.Bold)
+                            if (task.status != com.example.workminder.data.model.TaskStatus.DONE) {
+                                Button(
+                                    onClick = {
+                                        val timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME)
+                                        viewModel.updateTask(task.copy(status = com.example.workminder.data.model.TaskStatus.DONE, completed_at = timestamp))
+                                    },
+                                    modifier = Modifier.weight(1f).height(44.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = SaveGreen, contentColor = Color.White)
+                                ) {
+                                    Text("Completar", fontWeight = FontWeight.Bold)
+                                }
+                            } else {
+                                OutlinedButton(
+                                    onClick = {
+                                        val today = java.time.LocalDate.now()
+                                        val due = try {
+                                            java.time.LocalDate.parse(task.due_date.split("T")[0], java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+                                        } catch (e: Exception) { today }
+                                        val newStatus = if (due.isBefore(today)) com.example.workminder.data.model.TaskStatus.LATE else com.example.workminder.data.model.TaskStatus.PENDING
+                                        viewModel.updateTask(task.copy(status = newStatus, completed_at = null))
+                                    },
+                                    modifier = Modifier.weight(1f).height(44.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(2.dp, YellowPrimary),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = NavyText)
+                                ) {
+                                    Text("Reabrir", fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
 
-                        Divider(modifier = Modifier.padding(vertical = 12.dp), color = UrgentRed)
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Editar/Eliminar
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Button(
                                 onClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) },
                                 modifier = Modifier.weight(1f).height(44.dp),
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A4A8A), contentColor = Color.White) // Purple/Navy mix from design
+                                colors = ButtonDefaults.buttonColors(containerColor = NavyText, contentColor = Color.White)
                             ) {
-                                Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Filled.Edit, null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Editar", fontWeight = FontWeight.Bold)
                             }
                             Button(
                                 onClick = { 
                                     viewModel.deleteTask(task)
+                                    navController.popBackStack()
                                 },
                                 modifier = Modifier.weight(1f).height(44.dp),
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = UrgentRed, contentColor = Color.White)
+                                colors = ButtonDefaults.buttonColors(containerColor = Level5Red, contentColor = Color.White)
                             ) {
-                                Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Filled.Delete, null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Eliminar", fontWeight = FontWeight.Bold)
                             }
                         }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
                     }
                 }
             }

@@ -26,20 +26,33 @@ import com.example.workminder.data.model.TaskStatus
 
 @Composable
 fun DashboardScreen(navController: NavController, viewModel: MainViewModel = viewModel()) {
-    // Al entrar a la pantalla, refrescamos datos
     LaunchedEffect(Unit) {
         viewModel.refreshAll()
     }
 
-    val activeTasks = viewModel.tasks.filter { it.status != TaskStatus.DONE }
-    val pendingCount = activeTasks.count { it.status == TaskStatus.PENDING || it.status == TaskStatus.IN_PROGRESS }
-    val lateCount = activeTasks.count { it.status == TaskStatus.LATE }
+    val now = java.time.LocalDate.now()
+    val in7Days = now.plusDays(7)
+
+    val pendingThisWeek = viewModel.tasks.count { task ->
+        if (task.status != com.example.workminder.data.model.TaskStatus.PENDING) return@count false
+        try {
+            val date = java.time.LocalDate.parse(task.due_date.split("T")[0])
+            !date.isBefore(now) && !date.isAfter(in7Days)
+        } catch (e: Exception) { false }
+    }
+
+    val lateCount = viewModel.tasks.count { it.status == com.example.workminder.data.model.TaskStatus.LATE }
+    
+    val mostUrgentTasks = viewModel.tasks
+        .filter { it.status == com.example.workminder.data.model.TaskStatus.PENDING || it.status == com.example.workminder.data.model.TaskStatus.LATE }
+        .sortedByDescending { it.urgency }
+        .take(3)
 
     Scaffold(
         topBar = {
             WorkMinderTopBar(
                 subtitle = "Hola de nuevo,",
-                name = "Usuario", // TODO: Obtener nombre real del perfil
+                name = "Usuario",
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -65,12 +78,12 @@ fun DashboardScreen(navController: NavController, viewModel: MainViewModel = vie
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatCard(
-                    label = "Tareas pendientes",
-                    count = pendingCount,
+                    label = "Pendientes esta semana",
+                    count = pendingThisWeek,
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
-                    label = "Tareas atrasadas",
+                    label = "Total atrasadas",
                     count = lateCount,
                     modifier = Modifier.weight(1f)
                 )
@@ -79,29 +92,25 @@ fun DashboardScreen(navController: NavController, viewModel: MainViewModel = vie
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Considera trabajar en...",
+                text = "Más urgentes",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = NavyText
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (viewModel.tasks.isEmpty() && !viewModel.isLoading) {
-                Text("No tienes tareas pendientes. ¡Buen trabajo!", color = TextSecondary)
+            if (mostUrgentTasks.isEmpty() && !viewModel.isLoading) {
+                Text("No tienes tareas urgentes. ¡Buen trabajo!", color = TextSecondary)
             }
 
-            activeTasks.take(5).forEach { task ->
+            mostUrgentTasks.forEach { task ->
                 val subj = viewModel.subjects.find { it.id == task.subject_id }
                 TaskCard(
                     task = task,
                     subjectName = subj?.subject_name ?: "Sin materia",
                     subjectColor = subj?.color ?: "#808080",
-                    onClick = {
-                        navController.navigate(NavRoutes.TaskDetail.createRoute(task.id))
-                    },
-                    onAddClick = {
-                        navController.navigate(NavRoutes.EditTask.createRoute(task.id))
-                    }
+                    onClick = { /* No interactuable en Home */ },
+                    onAddClick = { /* No interactuable en Home */ }
                 )
                 Spacer(modifier = Modifier.height(10.dp))
             }

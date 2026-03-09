@@ -25,12 +25,12 @@ fun FilterDialog(
     onDismiss: () -> Unit,
     onApply: (sortBy: String, filter: String) -> Unit = { _, _ -> }
 ) {
-    var sortBy by remember { mutableStateOf("Fecha de entrega") }
-    var selectedFilter by remember { mutableStateOf("Por hacer") }
+    var sortBy by remember { mutableStateOf("Urgencia") }
+    var selectedFilter by remember { mutableStateOf("Pendientes") }
     var dropdownExpanded by remember { mutableStateOf(false) }
 
-    val sortOptions = listOf("Fecha de entrega", "Importancia", "Complejidad", "Materia")
-    val filterOptions = listOf("Por hacer", "Atrasadas", "Terminadas")
+    val sortOptions = listOf("Urgencia", "Importancia", "Complejidad", "Fecha de entrega")
+    val filterOptions = listOf("Pendientes", "Completadas", "Atrasadas")
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -49,7 +49,7 @@ fun FilterDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Ordenar por...",
+                        text = "Agrupar por...",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = NavyText
@@ -144,7 +144,7 @@ fun FilterDialog(
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText)
                 ) {
-                    Text("Aplicar filtros", fontWeight = FontWeight.Bold)
+                    Text("Aplicar", fontWeight = FontWeight.Bold)
                 }
             }
         }

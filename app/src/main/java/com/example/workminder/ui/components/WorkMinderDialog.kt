@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.workminder.ui.theme.NavyText
 import com.example.workminder.ui.theme.SurfaceWhite
-import com.example.workminder.ui.theme.UrgentRed
+import com.example.workminder.ui.theme.Level5Red
 import com.example.workminder.ui.theme.YellowPrimary
 import com.example.workminder.ui.theme.BackgroundGray
 
@@ -97,7 +97,7 @@ fun WorkMinderDialog(
                             .weight(1f)
                             .height(46.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isDestructive) UrgentRed else YellowPrimary,
+                            containerColor = if (isDestructive) Level5Red else YellowPrimary,
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(12.dp)

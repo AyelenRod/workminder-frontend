@@ -35,13 +35,14 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
     }
 
     val urgencyInfo = com.example.workminder.data.model.getUrgencyLevel(task.urgency)
-    val accentColor = com.example.workminder.data.model.getUrgencyColor(task.urgency)
+    val accentColorStr = com.example.workminder.data.model.getUrgencyColor(task.urgency)
+    val accentColor = Color(android.graphics.Color.parseColor(accentColorStr))
 
     Scaffold(
         topBar = {
             WorkMinderTopBar(
                 subtitle = "La Agenda de",
-                name = "Usuario",
+                name = viewModel.userName,
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -101,7 +102,7 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
                         DetailItem(
                             icon = Icons.Filled.CheckCircleOutline, 
                             label = "Estado:", 
-                            value = task.status.displayName, 
+                            value = task.status?.displayName ?: "Pendiente", 
                             valueColor = when(task.status) {
                                 com.example.workminder.data.model.TaskStatus.DONE -> SaveGreen
                                 com.example.workminder.data.model.TaskStatus.LATE -> Level5Red
@@ -240,13 +241,6 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
                                 Text("Eliminar", fontWeight = FontWeight.Bold)
                             }
                         }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-}
                     }
                 }
             }

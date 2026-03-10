@@ -162,7 +162,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
 
     Scaffold(
         topBar = {
-            WorkMinderTopBar(subtitle = "La Agenda de", name = "Usuario", onSettingsClick = { navController.navigate(NavRoutes.Settings.route) })
+            WorkMinderTopBar(subtitle = "La Agenda de", name = viewModel.userName, onSettingsClick = { navController.navigate(NavRoutes.Settings.route) })
         },
         bottomBar = { BottomNavBar(navController = navController) },
         floatingActionButton = {

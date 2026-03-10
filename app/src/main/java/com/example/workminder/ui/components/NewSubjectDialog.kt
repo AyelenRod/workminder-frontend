@@ -131,7 +131,7 @@ fun NewSubjectDialog(
                                 showError = true
                             } else {
                                 if (editingSubject != null) {
-                                    // TODO: Implement updateSubject in ViewModel if needed
+                                    viewModel.updateSubject(editingSubject.copy(subject_name = subjectName, color = selectedColor))
                                 } else {
                                     viewModel.addSubject(subjectName, selectedColor)
                                 }

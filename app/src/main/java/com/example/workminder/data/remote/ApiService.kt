@@ -13,6 +13,15 @@ interface ApiService {
     @POST("api/auth/register")
     suspend fun register(@Body data: Map<String, String>): Response<ApiResponse<AuthResponse>>
 
+    @GET("api/auth/me")
+    suspend fun getUserProfile(): Response<ApiResponse<com.example.workminder.data.model.User>>
+
+    @PUT("api/auth/profile")
+    suspend fun updateProfile(@Body data: Map<String, String>): Response<ApiResponse<com.example.workminder.data.model.User>>
+
+    @PUT("api/auth/password")
+    suspend fun changePassword(@Body data: Map<String, String>): Response<ApiResponse<Unit>>
+
     // Tasks
     @GET("api/tasks")
     suspend fun getTasks(): Response<ApiResponse<List<Task>>>

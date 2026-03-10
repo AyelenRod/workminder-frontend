@@ -20,4 +20,13 @@ class AuthRepository {
         val credentials = mapOf("email" to email, "password" to password)
         return RetrofitClient.apiService.login(credentials)
     }
+
+    suspend fun updateProfile(firstName: String, lastName: String): Response<ApiResponse<com.example.workminder.data.model.User>> {
+        val data = mapOf("first_name" to firstName, "last_name" to lastName)
+        return RetrofitClient.apiService.updateProfile(data)
+    }
+
+    suspend fun changePassword(data: Map<String, String>): Response<ApiResponse<Unit>> {
+        return RetrofitClient.apiService.changePassword(data)
+    }
 }

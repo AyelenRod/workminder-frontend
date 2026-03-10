@@ -18,8 +18,8 @@ import com.example.workminder.ui.theme.SurfaceWhite
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(navController: NavController) {
-    var pushEnabled by remember { mutableStateOf(true) }
-    var emailEnabled by remember { mutableStateOf(false) }
+    var pushEnabled by remember { mutableStateOf(com.example.workminder.data.remote.AuthManager.pushNotificationsEnabled) }
+    var emailEnabled by remember { mutableStateOf(com.example.workminder.data.remote.AuthManager.emailNotificationsEnabled) }
 
     Scaffold(
         topBar = {
@@ -58,7 +58,10 @@ fun NotificationsScreen(navController: NavController) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Notificaciones Push", style = MaterialTheme.typography.titleMedium, color = NavyText)
-                        Switch(checked = pushEnabled, onCheckedChange = { pushEnabled = it })
+                        Switch(checked = pushEnabled, onCheckedChange = { 
+                            pushEnabled = it
+                            com.example.workminder.data.remote.AuthManager.pushNotificationsEnabled = it
+                        })
                     }
                     
                     Divider(modifier = Modifier.padding(vertical = 12.dp))
@@ -69,7 +72,10 @@ fun NotificationsScreen(navController: NavController) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Alertas por Correo", style = MaterialTheme.typography.titleMedium, color = NavyText)
-                        Switch(checked = emailEnabled, onCheckedChange = { emailEnabled = it })
+                        Switch(checked = emailEnabled, onCheckedChange = { 
+                            emailEnabled = it
+                            com.example.workminder.data.remote.AuthManager.emailNotificationsEnabled = it
+                        })
                     }
                 }
             }

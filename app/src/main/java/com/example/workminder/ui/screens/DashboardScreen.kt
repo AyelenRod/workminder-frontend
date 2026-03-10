@@ -52,7 +52,7 @@ fun DashboardScreen(navController: NavController, viewModel: MainViewModel = vie
         topBar = {
             WorkMinderTopBar(
                 subtitle = "Hola de nuevo,",
-                name = "Usuario",
+                name = viewModel.userName,
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -109,8 +109,8 @@ fun DashboardScreen(navController: NavController, viewModel: MainViewModel = vie
                     task = task,
                     subjectName = subj?.subject_name ?: "Sin materia",
                     subjectColor = subj?.color ?: "#808080",
-                    onClick = { /* No interactuable en Home */ },
-                    onAddClick = { /* No interactuable en Home */ }
+                    onClick = { navController.navigate(NavRoutes.TaskDetail.createRoute(task.id)) },
+                    onAddClick = { navController.navigate(NavRoutes.EditTask.createRoute(task.id)) }
                 )
                 Spacer(modifier = Modifier.height(10.dp))
             }

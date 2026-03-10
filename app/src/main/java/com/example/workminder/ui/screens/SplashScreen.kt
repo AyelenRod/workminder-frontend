@@ -18,10 +18,10 @@ import com.example.workminder.ui.theme.YellowPrimary
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(onSplashFinished: () -> Unit) {
+fun SplashScreen(onSplashFinished: (Boolean) -> Unit) {
     LaunchedEffect(Unit) {
         delay(2000L)
-        onSplashFinished()
+        onSplashFinished(com.example.workminder.data.remote.AuthManager.isLoggedIn())
     }
 
     Box(

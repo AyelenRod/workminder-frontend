@@ -56,7 +56,7 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
         topBar = {
             WorkMinderTopBar(
                 subtitle = "La Agenda de", 
-                name = "Usuario",
+                name = viewModel.userName,
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -333,7 +333,7 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                             urgency = urgencyCalculated,
                             importance = levelImp.value,
                             complexity = levelComp.value,
-                            notes = notes,
+                            extra_note = notes,
                             subject_id = if (selectedSubjectId == "none") null else selectedSubjectId,
                             subtasks = subtasks.filter { it.second.isNotBlank() }.map { 
                                 com.example.workminder.data.model.Subtask(java.util.UUID.randomUUID().toString(), taskId, it.second) 
@@ -350,11 +350,6 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
             ) {
                 Text("Guardar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-        }
-    }
-}
 
             Spacer(modifier = Modifier.height(32.dp))
         }

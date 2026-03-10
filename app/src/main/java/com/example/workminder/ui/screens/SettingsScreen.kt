@@ -6,9 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
@@ -23,7 +21,7 @@ import com.example.workminder.ui.navigation.NavRoutes
 import com.example.workminder.ui.theme.BackgroundGray
 import com.example.workminder.ui.theme.NavyText
 import com.example.workminder.ui.theme.SurfaceWhite
-import com.example.workminder.ui.theme.UrgentRed
+import com.example.workminder.ui.theme.Level5Red
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +69,7 @@ fun SettingsScreen(navController: NavController) {
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SurfaceWhite, contentColor = UrgentRed)
+                colors = ButtonDefaults.buttonColors(containerColor = SurfaceWhite, contentColor = Level5Red)
             ) {
                 Icon(Icons.Filled.ExitToApp, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))

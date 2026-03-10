@@ -15,12 +15,14 @@ data class Task(
     @SerializedName("task_status") val status: TaskStatus? = TaskStatus.PENDING,
     @SerializedName("complexity") val complexity: Int = 3,
     @SerializedName("importance") val importance: Int = 3,
-    @SerializedName("extra_note") var notes: String = "",
-    val subtasks: List<Subtask> = emptyList(),
-    val reminders: List<String> = emptyList() // Dates in String ISO format
+    @SerializedName("extra_note") var extra_note: String = "",
+    @SerializedName("subtasks") val subtasks: List<Subtask> = emptyList(),
+    @SerializedName("reminders") val reminders: List<String> = emptyList(), // Dates in String ISO format
+    var is_synced: Boolean = true
 ) {
     val title: String get() = task_title
     val dueDate: String get() = due_date
+    val notes: String get() = extra_note
     
     val displayDate: String get() {
         return try {

@@ -20,7 +20,7 @@ object MockData {
             status = TaskStatus.PENDING,
             urgency = 0.9,
             complexity = 5,
-            notes = "Entregar antes del viernes.",
+            extra_note = "Entregar antes del viernes.",
             subtasks = listOf(
                 Subtask("s1", "1", "Redactar introducción"),
                 Subtask("s2", "1", "Agregar diagramas")
@@ -31,7 +31,7 @@ object MockData {
             task_title = "Diseños en Figma",
             subject_id = "1",
             due_date = "01/03/2026",
-            status = TaskStatus.IN_PROGRESS,
+            status = TaskStatus.PENDING,
             urgency = 0.5,
             complexity = 3,
             subtasks = listOf(
@@ -44,10 +44,10 @@ object MockData {
             task_title = "Póster",
             subject_id = "1",
             due_date = "01/03/2026",
-            status = TaskStatus.IN_PROGRESS,
+            status = TaskStatus.PENDING,
             urgency = 0.2,
             complexity = 1,
-            notes = "Usar plantilla corporativa."
+            extra_note = "Usar plantilla corporativa."
         ),
         Task(
             id = "4",
@@ -109,7 +109,7 @@ object MockData {
         }
     }
 
-    val pendingCount get() = tasks.count { it.status == TaskStatus.PENDING || it.status == TaskStatus.IN_PROGRESS }
+    val pendingCount get() = tasks.count { it.status == TaskStatus.PENDING || it.status == TaskStatus.PENDING }
 
     val lateCount get() = tasks.count { it.status == TaskStatus.LATE }
 

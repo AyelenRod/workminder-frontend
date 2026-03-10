@@ -29,8 +29,9 @@ fun NavGraph(navController: NavHostController) {
         startDestination = NavRoutes.Splash.route
     ) {
         composable(NavRoutes.Splash.route) {
-            SplashScreen(onSplashFinished = {
-                navController.navigate(NavRoutes.Login.route) {
+            SplashScreen(onSplashFinished = { isLoggedIn ->
+                val route = if (isLoggedIn) NavRoutes.Dashboard.route else NavRoutes.Login.route
+                navController.navigate(route) {
                     popUpTo(NavRoutes.Splash.route) { inclusive = true }
                 }
             })

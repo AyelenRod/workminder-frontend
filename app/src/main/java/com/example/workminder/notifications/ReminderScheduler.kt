@@ -35,12 +35,29 @@ class ReminderScheduler(private val context: Context) {
         dueDateStr: String,
         reminders: List<String>
     ) {
+        if (!com.example.workminder.data.remote.AuthManager.pushNotificationsEnabled) {
+            println("ReminderScheduler: Push desactivadas, no se programa nada.")
+            return
+        }
+
         reminders.forEachIndexed { index, reminderStr ->
             try {
-                // Formato esperado: "2026-03-20 15:30"
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-                val notifyAt = LocalDateTime.parse(reminderStr, formatter)
+                // Normalizar formato: "yyyy-MM-dd HH:mm"
+                val normalizedStr = reminderStr.replace("T", " ")
+                val formatter = if (normalizedStr.contains(":")) {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                }
+                
+                val notifyAt = if (normalizedStr.contains(":")) {
+                    LocalDateTime.parse(normalizedStr, formatter)
+                } else {
+                    LocalDate.parse(normalizedStr, formatter).atStartOfDay()
+                }
+
                 val now = LocalDateTime.now()
+                android.util.Log.d("ReminderScheduler", "Programando $taskTitle para $notifyAt")
 
                 if (notifyAt.isAfter(now)) {
                     val delayMs = notifyAt

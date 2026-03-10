@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.workminder.data.model.Subtask
@@ -73,7 +74,7 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
         topBar = {
             WorkMinderTopBar(
                 subtitle = "La Agenda de",
-                name = "Usuario",
+                name = viewModel.userName,
                 onSettingsClick = { navController.navigate(NavRoutes.Settings.route) }
             )
         },
@@ -299,7 +300,7 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
                             urgency = urgencyCalculated,
                             importance = levelImp.value,
                             complexity = levelComp.value,
-                            notes = notes,
+                            extra_note = notes,
                             subject_id = if (selectedSubjectId == "none") null else selectedSubjectId,
                             subtasks = subtasks.filter { it.second.isNotBlank() }.map { subPair ->
                                 val existing = original.subtasks.find { it.subtask_id == subPair.first }
@@ -325,11 +326,6 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Aceptar cambios", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-
-            Spacer(modifier = Modifier.height(40.dp))
-        }
-    }
-}
 
             Spacer(modifier = Modifier.height(40.dp))
         }

@@ -19,7 +19,7 @@ private val WorkMinderColorScheme = lightColorScheme(
     onSurfaceVariant   = TextSecondary,
     tertiary           = SaveGreen,
     onTertiary         = SurfaceWhite,
-    error              = UrgentRed,
+    error              = Level5Red,
     onError            = SurfaceWhite,
 )
 

@@ -28,7 +28,8 @@ fun RegisterScreen(
     navController: NavController,
     viewModel: AuthViewModel = viewModel()
 ) {
-    var name by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -69,8 +70,17 @@ fun RegisterScreen(
 
             // Inputs del Formulario
             OutlinedTextField(
-                value = name, onValueChange = { name = it },
-                label = { Text("Nombre completo") },
+                value = firstName, onValueChange = { firstName = it },
+                label = { Text("Nombre") },
+                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = YellowPrimary, unfocusedBorderColor = NavyText.copy(alpha = 0.3f))
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = lastName, onValueChange = { lastName = it },
+                label = { Text("Apellidos") },
                 modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = YellowPrimary, unfocusedBorderColor = NavyText.copy(alpha = 0.3f))
             )
@@ -118,7 +128,7 @@ fun RegisterScreen(
 
             // Botón de Registro vinculado al ViewModel
             Button(
-                onClick = { viewModel.register(name, email, password, confirmPassword) },
+                onClick = { viewModel.register(firstName, lastName, email, password, confirmPassword) },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText),

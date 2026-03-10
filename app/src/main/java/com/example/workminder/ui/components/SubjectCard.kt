@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.workminder.data.model.Subject
 import com.example.workminder.ui.theme.NavyText
-import com.example.workminder.ui.theme.UrgentRed
+import com.example.workminder.ui.theme.Level5Red
 
 @Composable
 fun SubjectCard(
@@ -78,7 +78,7 @@ fun SubjectCard(
                             onClick = onDeleteClick,
                             modifier = Modifier.weight(1f).height(40.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = UrgentRed, contentColor = Color.White)
+                            colors = ButtonDefaults.buttonColors(containerColor = Level5Red, contentColor = Color.White)
                         ) {
                             Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))

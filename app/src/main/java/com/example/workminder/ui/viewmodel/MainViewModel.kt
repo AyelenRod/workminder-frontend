@@ -118,19 +118,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun isInternetAvailable(): Boolean {
+        val connectivityManager = getApplication<Application>().getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
     // --- Perfil ---
     fun updateProfile(firstName: String, lastName: String, onResult: (Boolean, String?) -> Unit) {
+        if (!isInternetAvailable()) {
+            onResult(false, "Se requiere conexión a internet para guardar los cambios.")
+            return
+        }
+
         viewModelScope.launch {
             isLoading = true
             try {
                 val response = authRepo.updateProfile(firstName, lastName)
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val updatedUser = response.body()?.data
-                    if (updatedUser != null) {
-                        userDao.insertUser(updatedUser)
+                    val currentLocalUser = currentUser
+                    if (currentLocalUser != null) {
+                        val safeUser = currentLocalUser.copy(
+                            firstName = firstName,
+                            lastName = lastName
+                        )
+                        userDao.insertUser(safeUser)
+                        userName = firstName
                         onResult(true, null)
                     } else {
-                        onResult(false, "Respuesta vacía del servidor")
+                        onResult(false, "No se encontró sesión local")
                     }
                 } else {
                     onResult(false, response.body()?.error ?: "Error al actualizar perfil")

@@ -43,7 +43,7 @@ fun NavGraph(navController: NavHostController) {
             RegisterScreen(navController = navController)
         }
         composable(NavRoutes.Settings.route) {
-            SettingsScreen(navController = navController)
+            SettingsScreen(navController = navController, viewModel = sharedViewModel)
         }
         composable(NavRoutes.Dashboard.route) {
             DashboardScreen(navController = navController, viewModel = sharedViewModel)

@@ -48,16 +48,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val response = authRepo.register(email, pass, firstName.trim(), lastName.trim())
-
                 if (response.isSuccessful && response.body()?.success == true) {
                     val auth = response.body()?.data
                     AuthManager.token = auth?.accessToken
                     AuthManager.userId = auth?.user?.id
                     
                     auth?.user?.let { remoteUser ->
-                         RetrofitClient.apiService // Trigger lazy init if needed
-                         userRepo.updateProfile(remoteUser.firstName ?: "", remoteUser.lastName ?: "")
-                         // Re-fetching or manual sync is safer in real app, but here we fulfill the SOA pattern
+                        userRepo.saveUserLocally(User(
+                            id = remoteUser.id,
+                            firstName = remoteUser.firstName ?: "",
+                            lastName = remoteUser.lastName ?: "",
+                            email = remoteUser.email
+                        ))
                     }
                     isSuccess = true
                 } else {
@@ -83,8 +85,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     AuthManager.userId = auth?.user?.id
                     
                     auth?.user?.let { remoteUser ->
-                        // Using userRepo instead of direct DAO
-                        userRepo.syncUserProfile()
+                        userRepo.saveUserLocally(User(
+                            id = remoteUser.id,
+                            firstName = remoteUser.firstName ?: "",
+                            lastName = remoteUser.lastName ?: "",
+                            email = remoteUser.email
+                        ))
                     }
                     isSuccess = true
                 } else {
@@ -103,8 +109,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             isLoading = true
             errorMessage = null
             try {
-                val data = mapOf("new_password" to newPassword)
-                val response = authRepo.changePassword(data)
+                val response = authRepo.changePassword(mapOf("new_password" to newPassword))
                 if (response.isSuccessful && response.body()?.success == true) {
                     onResult(true, null)
                 } else {

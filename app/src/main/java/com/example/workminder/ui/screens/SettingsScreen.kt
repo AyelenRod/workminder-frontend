@@ -25,7 +25,7 @@ import com.example.workminder.ui.theme.Level5Red
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(navController: NavController, viewModel: com.example.workminder.ui.viewmodel.MainViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -62,9 +62,10 @@ fun SettingsScreen(navController: NavController) {
             
             Button(
                 onClick = { 
-                    com.example.workminder.data.remote.AuthManager.clear()
-                    navController.navigate(NavRoutes.Login.route) {
-                        popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
+                    viewModel.logout {
+                        navController.navigate(NavRoutes.Login.route) {
+                            popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp),

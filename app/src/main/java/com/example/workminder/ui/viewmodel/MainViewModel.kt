@@ -197,4 +197,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) { error = e.message }
         }
     }
+
+    fun logout(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            userRepo.clearSession()
+            com.example.workminder.data.remote.AuthManager.clear()
+            userName = "Usuario"
+            currentUser = null
+            tasks.clear()
+            subjects.clear()
+            onComplete()
+        }
+    }
 }

@@ -11,6 +11,10 @@ class UserRepository(
 ) {
     fun getUser(): Flow<User?> = userDao.getUser()
 
+    suspend fun saveUserLocally(user: User) {
+        userDao.insertUser(user)
+    }
+
     suspend fun syncUserProfile() {
         try {
             val response = apiService.getUserProfile()

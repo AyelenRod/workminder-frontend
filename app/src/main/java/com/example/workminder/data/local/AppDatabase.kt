@@ -9,7 +9,7 @@ import com.example.workminder.data.model.Subject
 import com.example.workminder.data.model.Task
 import com.example.workminder.data.model.User
 
-@Database(entities = [Task::class, Subject::class, User::class], version = 5, exportSchema = false)
+@Database(entities = [Task::class, Subject::class, User::class], version = 7, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 

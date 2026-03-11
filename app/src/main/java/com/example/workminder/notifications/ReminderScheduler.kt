@@ -33,27 +33,29 @@ class ReminderScheduler(private val context: Context) {
         taskId: String,
         taskTitle: String,
         dueDateStr: String,
-        reminders: List<String>
+        reminders: List<com.example.workminder.data.model.Reminder>
     ) {
         if (!com.example.workminder.data.remote.AuthManager.pushNotificationsEnabled) {
-            println("ReminderScheduler: Push desactivadas, no se programa nada.")
             return
         }
 
-        reminders.forEachIndexed { index, reminderStr ->
+        reminders.forEachIndexed { index, reminder ->
+            val reminderStr = reminder.reminderDate
             try {
-                // Normalizar formato: "yyyy-MM-dd HH:mm"
-                val normalizedStr = reminderStr.replace("T", " ")
-                val formatter = if (normalizedStr.contains(":")) {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                val notifyAt = if (reminderStr.contains("T")) {
+                    java.time.ZonedDateTime.parse(reminderStr).toLocalDateTime()
                 } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                }
-                
-                val notifyAt = if (normalizedStr.contains(":")) {
-                    LocalDateTime.parse(normalizedStr, formatter)
-                } else {
-                    LocalDate.parse(normalizedStr, formatter).atStartOfDay()
+                    val normalizedStr = reminderStr.replace("T", " ")
+                    val formatter = if (normalizedStr.contains(":")) {
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                    } else {
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                    }
+                    if (normalizedStr.contains(":")) {
+                        LocalDateTime.parse(normalizedStr, formatter)
+                    } else {
+                        LocalDate.parse(normalizedStr, formatter).atStartOfDay()
+                    }
                 }
 
                 val now = LocalDateTime.now()

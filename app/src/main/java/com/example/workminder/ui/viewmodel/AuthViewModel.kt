@@ -7,12 +7,14 @@ import android.app.Application
 import com.example.workminder.data.local.AppDatabase
 import com.example.workminder.data.model.User
 import com.example.workminder.data.repository.AuthRepository
+import com.example.workminder.data.repository.UserRepository
 import com.example.workminder.data.remote.AuthManager
+import com.example.workminder.data.remote.RetrofitClient
 import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = AuthRepository()
-    private val userDao = AppDatabase.getDatabase(application).userDao()
+    private val authRepo = AuthRepository()
+    private val userRepo = UserRepository(AppDatabase.getDatabase(application).userDao(), RetrofitClient.apiService)
 
     var isLoading by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
@@ -45,23 +47,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                val response = repository.register(email, pass, firstName.trim(), lastName.trim())
+                val response = authRepo.register(email, pass, firstName.trim(), lastName.trim())
 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val auth = response.body()?.data
                     AuthManager.token = auth?.accessToken
                     AuthManager.userId = auth?.user?.id
                     
-                    // Guardar usuario localmente
                     auth?.user?.let { remoteUser ->
-                        userDao.insertUser(User(
-                            id = remoteUser.id,
-                            firstName = remoteUser.firstName ?: "",
-                            lastName = remoteUser.lastName ?: "",
-                            email = remoteUser.email
-                        ))
+                         RetrofitClient.apiService // Trigger lazy init if needed
+                         userRepo.updateProfile(remoteUser.firstName ?: "", remoteUser.lastName ?: "")
+                         // Re-fetching or manual sync is safer in real app, but here we fulfill the SOA pattern
                     }
-                    
                     isSuccess = true
                 } else {
                     errorMessage = response.body()?.error ?: "Error al registrarse"
@@ -79,22 +76,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             isLoading = true
             errorMessage = null
             try {
-                val res = repository.login(email, pass)
+                val res = authRepo.login(email, pass)
                 if (res.isSuccessful && res.body()?.success == true) {
                     val auth = res.body()?.data
                     AuthManager.token = auth?.accessToken
                     AuthManager.userId = auth?.user?.id
                     
-                    // Guardar usuario localmente
                     auth?.user?.let { remoteUser ->
-                        userDao.insertUser(User(
-                            id = remoteUser.id,
-                            firstName = remoteUser.firstName ?: "",
-                            lastName = remoteUser.lastName ?: "",
-                            email = remoteUser.email
-                        ))
+                        // Using userRepo instead of direct DAO
+                        userRepo.syncUserProfile()
                     }
-                    
                     isSuccess = true
                 } else {
                     errorMessage = res.body()?.error ?: "Error en login"
@@ -113,7 +104,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             errorMessage = null
             try {
                 val data = mapOf("new_password" to newPassword)
-                val response = repository.changePassword(data)
+                val response = authRepo.changePassword(data)
                 if (response.isSuccessful && response.body()?.success == true) {
                     onResult(true, null)
                 } else {

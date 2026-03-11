@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,6 +11,14 @@ android {
     namespace = "com.example.workminder"
     compileSdk = 36
 
+    // Leer la IP desde local.properties (estilo .env)
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
+    }
+    val serverIp = localProperties.getProperty("server.ip") ?: "192.168.1.69"
+
     defaultConfig {
         applicationId = "com.example.workminder"
         minSdk = 29
@@ -17,6 +27,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        buildConfigField("String", "SERVER_IP", "\"$serverIp\"")
     }
 
     buildTypes {
@@ -37,7 +49,10 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+
+
 }
 
 dependencies {

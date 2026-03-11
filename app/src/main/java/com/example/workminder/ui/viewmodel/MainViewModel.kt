@@ -1,31 +1,30 @@
 package com.example.workminder.ui.viewmodel
 
 import androidx.compose.runtime.*
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.workminder.data.model.Subject
 import com.example.workminder.data.model.Task
 import com.example.workminder.data.model.User
-import com.example.workminder.data.repository.SubjectRepository
-import com.example.workminder.data.repository.TaskRepository
+import com.example.workminder.data.repository.*
 import com.example.workminder.data.local.AppDatabase
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.example.workminder.data.remote.RetrofitClient
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.example.workminder.data.remote.NetworkConfig
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val taskDao = AppDatabase.getDatabase(application).taskDao()
-    private val subjectDao = AppDatabase.getDatabase(application).subjectDao()
-    private val userDao = AppDatabase.getDatabase(application).userDao()
-    private val authRepo = com.example.workminder.data.repository.AuthRepository()
-    private val taskRepo = TaskRepository(taskDao, RetrofitClient.apiService)
-    private val subjectRepo = SubjectRepository(subjectDao, RetrofitClient.apiService)
+    private val db = AppDatabase.getDatabase(application)
+    private val taskRepo = TaskRepository(db.taskDao(), RetrofitClient.apiService)
+    private val subjectRepo = SubjectRepository(db.subjectDao(), RetrofitClient.apiService)
+    private val userRepo = UserRepository(db.userDao(), RetrofitClient.apiService)
+    private val authRepo = AuthRepository()
     private val scheduler = com.example.workminder.notifications.ReminderScheduler(application)
 
-    // Estados
     var tasks = mutableStateListOf<Task>()
     var subjects = mutableStateListOf<Subject>()
     var currentUser by mutableStateOf<User?>(null)
@@ -34,17 +33,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var error by mutableStateOf<String?>(null)
 
     init {
+        observeUserData()
+        observeTasksData()
+        observeSubjectsData()
+        refreshAll()
+    }
+
+    private fun observeUserData() {
         viewModelScope.launch {
-            userDao.getUser().collect { user ->
+            userRepo.getUser().collect { user ->
                 currentUser = user
-                user?.let {
-                    userName = it.firstName
-                }
+                user?.let { userName = it.firstName }
             }
         }
+    }
+
+    private fun observeTasksData() {
         viewModelScope.launch {
             taskRepo.getAllTasks().collect { list ->
-                val today = java.time.LocalDate.now()
+                val today = LocalDate.now()
                 val validTasks = mutableListOf<Task>()
                 
                 for (task in list) {
@@ -53,41 +60,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     
                     if (task.status == com.example.workminder.data.model.TaskStatus.DONE && task.completed_at != null) {
                         try {
-                            val compDate = java.time.LocalDateTime.parse(task.completed_at, java.time.format.DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
-                            if (java.time.temporal.ChronoUnit.DAYS.between(compDate, today) > 7) {
-                                shouldDelete = true
-                            }
+                            val compDate = LocalDateTime.parse(task.completed_at, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
+                            if (ChronoUnit.DAYS.between(compDate, today) > 7) shouldDelete = true
                         } catch(e: Exception) {}
                     } else if (task.status == com.example.workminder.data.model.TaskStatus.PENDING) {
                         try {
-                            val due = java.time.LocalDate.parse(task.due_date.split("T")[0], java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
-                            if (due.isBefore(today)) {
-                                shouldUpdate = true
-                            }
+                            val due = LocalDate.parse(task.due_date.split("T")[0], DateTimeFormatter.ISO_LOCAL_DATE)
+                            if (due.isBefore(today)) shouldUpdate = true
                         } catch(e: Exception) {}
                     }
                     
                     if (shouldDelete) {
                         deleteTask(task)
                     } else if (shouldUpdate) {
-                        updateTask(task.copy(status = com.example.workminder.data.model.TaskStatus.LATE))
-                        validTasks.add(task.copy(status = com.example.workminder.data.model.TaskStatus.LATE))
+                        val updated = task.copy(status = com.example.workminder.data.model.TaskStatus.LATE)
+                        updateTask(updated)
+                        validTasks.add(updated)
                     } else {
                         validTasks.add(task)
                     }
                 }
-                
                 tasks.clear()
                 tasks.addAll(validTasks)
             }
         }
+    }
+
+    private fun observeSubjectsData() {
         viewModelScope.launch {
             subjectRepo.getAllSubjects().collect { list ->
                 subjects.clear()
                 subjects.addAll(list)
             }
         }
-        refreshAll()
     }
 
     private var refreshJob: kotlinx.coroutines.Job? = null
@@ -97,21 +102,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         refreshJob = viewModelScope.launch {
             isLoading = true
             try {
-                // Asegurar que tenemos el IP del servidor antes de sincronizar
-                com.example.workminder.data.remote.NetworkConfig.discoverServer(getApplication())
-                
+                NetworkConfig.discoverServer(getApplication())
                 taskRepo.syncTasks()
                 subjectRepo.syncSubjects()
-                
-                // Sincronizar usuario
-                val userRes = RetrofitClient.apiService.getUserProfile()
-                if (userRes.isSuccessful && userRes.body()?.success == true) {
-                    userRes.body()?.data?.let { userDao.insertUser(it) }
-                }
+                userRepo.syncUserProfile()
             } catch (e: Exception) {
-                if (e !is kotlinx.coroutines.CancellationException) {
-                    error = e.message
-                }
+                if (e !is kotlinx.coroutines.CancellationException) error = e.message
             } finally {
                 isLoading = false
             }
@@ -119,53 +115,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun isInternetAvailable(): Boolean {
-        val connectivityManager = getApplication<Application>().getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        val cm = getApplication<Application>().getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+        return caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    // --- Perfil ---
     fun updateProfile(firstName: String, lastName: String, onResult: (Boolean, String?) -> Unit) {
         if (!isInternetAvailable()) {
-            onResult(false, "Se requiere conexión a internet para guardar los cambios.")
+            onResult(false, "Se requiere conexión a internet.")
             return
         }
 
         viewModelScope.launch {
             isLoading = true
-            try {
-                val response = authRepo.updateProfile(firstName, lastName)
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val currentLocalUser = currentUser
-                    if (currentLocalUser != null) {
-                        val safeUser = currentLocalUser.copy(
-                            firstName = firstName,
-                            lastName = lastName
-                        )
-                        userDao.insertUser(safeUser)
-                        userName = firstName
-                        onResult(true, null)
-                    } else {
-                        onResult(false, "No se encontró sesión local")
-                    }
-                } else {
-                    onResult(false, response.body()?.error ?: "Error al actualizar perfil")
-                }
-            } catch (e: Exception) {
-                onResult(false, e.message)
-            } finally {
-                isLoading = false
+            val success = userRepo.updateProfile(firstName, lastName)
+            if (success) {
+                userName = firstName
+                onResult(true, null)
+            } else {
+                onResult(false, "Error al actualizar perfil")
             }
+            isLoading = false
         }
     }
 
-    // --- Materias ---
     fun addSubject(name: String, color: String) {
         viewModelScope.launch {
             try {
-                val newSubject = Subject(java.util.UUID.randomUUID().toString(), name, color)
-                subjectRepo.createSubject(newSubject)
+                subjectRepo.createSubject(Subject(java.util.UUID.randomUUID().toString(), name, color))
                 refreshAll()
             } catch (e: Exception) { error = e.message }
         }
@@ -184,16 +161,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 subjectRepo.deleteSubject(id)
-                // Evitar huerfanos: nular dependencias
-                tasks.filter { it.subject_id == id }.forEach { orphanedTask ->
-                    updateTask(orphanedTask.copy(subject_id = null))
-                }
+                tasks.filter { it.subject_id == id }.forEach { updateTask(it.copy(subject_id = null)) }
                 refreshAll()
             } catch (e: Exception) { error = e.message }
         }
     }
 
-    // --- Tareas ---
     fun createTask(task: Task) {
         viewModelScope.launch {
             try {

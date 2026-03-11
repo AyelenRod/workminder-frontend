@@ -1,17 +1,16 @@
 package com.example.workminder.data.repository
 
 import com.example.workminder.data.model.Subject
-import com.example.workminder.data.remote.RetrofitClient
-import com.example.workminder.data.remote.ApiResponse
-import retrofit2.Response
 import com.example.workminder.data.remote.ApiService
 import com.example.workminder.data.local.SubjectDao
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CancellationException
 
 class SubjectRepository(
     private val subjectDao: SubjectDao,
     private val api: ApiService
 ) {
-    fun getAllSubjects(): kotlinx.coroutines.flow.Flow<List<Subject>> = subjectDao.getAllSubjects()
+    fun getAllSubjects(): Flow<List<Subject>> = subjectDao.getAllSubjects()
 
     suspend fun syncSubjects() {
         try {
@@ -23,7 +22,7 @@ class SubjectRepository(
                 }
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+            if (e is CancellationException) throw e
         }
     }
 
@@ -40,23 +39,20 @@ class SubjectRepository(
                     subjectDao.insertSubject(remoteSubj)
                 }
             }
-        } catch (e: Exception) {
-        }
+        } catch (e: Exception) {}
     }
 
     suspend fun updateSubject(subject: Subject) {
         subjectDao.insertSubject(subject)
         try {
             api.updateSubject(subject.id, mapOf("subject_name" to subject.subject_name, "color" to subject.color))
-        } catch (e: Exception) {
-        }
+        } catch (e: Exception) {}
     }
 
     suspend fun deleteSubject(id: String) {
         subjectDao.deleteSubjectById(id)
         try {
             api.deleteSubject(id)
-        } catch (e: Exception) {
-        }
+        } catch (e: Exception) {}
     }
 }

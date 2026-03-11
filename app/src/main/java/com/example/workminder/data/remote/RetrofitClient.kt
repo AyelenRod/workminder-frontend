@@ -5,28 +5,23 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     private var currentService: ApiService? = null
     private var lastBaseUrl: String? = null
 
-    // Interceptor to add JWT token
     private val authInterceptor = Interceptor { chain ->
         var request = chain.request()
         val token = AuthManager.token
         
         if (token != null) {
             request = request.newBuilder()
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer ${token.trim()}")
                 .build()
         }
             
-        try {
-            chain.proceed(request)
-        } catch (e: java.io.IOException) {
-            // Si hay error de red (como SocketTimeout), esto podría disparar un re-descubrimiento en el siguiente intento
-            throw e
-        }
+        chain.proceed(request)
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -34,9 +29,9 @@ object RetrofitClient {
     }
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-        .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .writeTimeout(15, TimeUnit.SECONDS)
         .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
         .build()

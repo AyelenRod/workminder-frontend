@@ -171,7 +171,7 @@ fun TaskDetailScreen(taskId: String, navController: NavController, viewModel: Ma
                                     Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Filled.Notifications, null, tint = NavyText, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(reminder, style = MaterialTheme.typography.bodySmall, color = NavyText, fontWeight = FontWeight.SemiBold)
+                                        Text(reminder.reminderDate, style = MaterialTheme.typography.bodySmall, color = NavyText, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
                             }

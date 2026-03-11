@@ -41,7 +41,7 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
     var complexity  by remember { mutableStateOf("Media") }
     var notes       by remember { mutableStateOf("") }
     val subtasks    = remember { mutableStateListOf(java.util.UUID.randomUUID().toString() to "") }
-    val selectedReminders = remember { mutableStateListOf<String>() }
+    val selectedReminders = remember { mutableStateListOf<com.example.workminder.data.model.Reminder>() }
 
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
@@ -263,9 +263,9 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
             Spacer(modifier = Modifier.height(24.dp))
 
             FormLabel("Recordatorios")
-            selectedReminders.forEachIndexed { index, dateStr ->
+            selectedReminders.forEachIndexed { index, reminder ->
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(dateStr, color = NavyText, modifier = Modifier.weight(1f))
+                    Text(reminder.reminderDate, color = NavyText, modifier = Modifier.weight(1f))
                     IconButton(onClick = { selectedReminders.removeAt(index) }) {
                         Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error)
                     }
@@ -277,8 +277,7 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                     val cal = java.util.Calendar.getInstance()
                     android.app.DatePickerDialog(context, { _, y, m, d ->
                         android.app.TimePickerDialog(context, { _, hh, mm ->
-                            val fullDateStr = String.format("%04d-%02d-%02d %02d:%02d", y, m + 1, d, hh, mm)
-                            // Validar fechas de recordatorio
+                            val fullDateStr = String.format("%04d-%02d-%02dT%02d:%02d:00Z", y, m + 1, d, hh, mm)
                             try {
                                 val now = java.time.LocalDateTime.now()
                                 val selectedDate = java.time.LocalDateTime.of(y, m+1, d, hh, mm)
@@ -292,14 +291,14 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                                         validationMessage = "El recordatorio no puede ser después de la fecha de entrega."
                                         showValidationError = true
                                     } else {
-                                        selectedReminders.add(fullDateStr)
+                                        selectedReminders.add(com.example.workminder.data.model.Reminder(fullDateStr))
                                     }
                                 } else {
                                     validationMessage = "Indica primero la fecha de entrega."
                                     showValidationError = true
                                 }
                             } catch (e: Exception) {
-                                selectedReminders.add(fullDateStr)
+                                selectedReminders.add(com.example.workminder.data.model.Reminder(fullDateStr))
                             }
                         }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
                     }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
@@ -333,7 +332,7 @@ fun NewTaskScreen(navController: NavController, viewModel: MainViewModel = viewM
                             urgency = urgencyCalculated,
                             importance = levelImp.value,
                             complexity = levelComp.value,
-                            extra_note = notes,
+                            extra_note = if (notes.isBlank()) null else notes,
                             subject_id = if (selectedSubjectId == "none") null else selectedSubjectId,
                             subtasks = subtasks.filter { it.second.isNotBlank() }.map { 
                                 com.example.workminder.data.model.Subtask(java.util.UUID.randomUUID().toString(), taskId, it.second) 

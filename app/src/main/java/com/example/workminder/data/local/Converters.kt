@@ -55,4 +55,14 @@ class Converters {
         val listType = object : TypeToken<List<Int>>() {}.type
         return gson.fromJson(value, listType) ?: emptyList()
     }
+    @TypeConverter
+    fun fromReminderList(value: List<com.example.workminder.data.model.Reminder>?): String {
+        return gson.toJson(value)
+    }
+
+    @TypeConverter
+    fun toReminderList(value: String): List<com.example.workminder.data.model.Reminder> {
+        val listType = object : com.google.gson.reflect.TypeToken<List<com.example.workminder.data.model.Reminder>>() {}.type
+        return gson.fromJson(value, listType) ?: emptyList()
+    }
 }

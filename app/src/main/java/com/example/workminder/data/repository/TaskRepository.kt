@@ -4,7 +4,6 @@ import com.example.workminder.data.local.TaskDao
 import com.example.workminder.data.model.Task
 import com.example.workminder.data.remote.ApiService
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 class TaskRepository(
     private val taskDao: TaskDao,
@@ -18,8 +17,6 @@ class TaskRepository(
             if (response.isSuccessful && response.body()?.success == true) {
                 val remoteTasks = response.body()?.data
                 if (!remoteTasks.isNullOrEmpty()) {
-                    // Solo actualizamos/insertamos lo que viene del servidor
-                    // No borramos lo local a menos que estemos seguros
                     taskDao.insertTasks(remoteTasks)
                 }
             }
@@ -29,7 +26,6 @@ class TaskRepository(
     }
 
     suspend fun createTask(task: Task) {
-        // Guardar localmente marcado como no sincronizado
         val localTask = task.copy(is_synced = false)
         taskDao.insertTask(localTask)
         
@@ -38,41 +34,32 @@ class TaskRepository(
             if (response.isSuccessful && response.body()?.success == true) {
                 val remoteTask = response.body()?.data
                 if (remoteTask != null) {
-                    // Si el servidor devolvió un ID diferente o para asegurar consistencia
                     if (remoteTask.id != task.id) {
                         taskDao.deleteTaskById(task.id)
                     }
                     taskDao.insertTask(remoteTask.copy(is_synced = true))
                 }
-            } else {
-                android.util.Log.e("TaskRepository", "Error creando tarea: ${response.code()} ${response.errorBody()?.string()}")
             }
-        } catch (e: Exception) {
-            android.util.Log.e("TaskRepository", "Fallo de red creando tarea: ${e.message}")
-        }
+        } catch (e: Exception) {}
     }
 
     suspend fun updateTask(task: Task) {
         taskDao.updateTask(task)
         try {
-            val response = apiService.updateTask(task.id, task)
-            if (!response.isSuccessful) {
-                android.util.Log.e("TaskRepository", "Error actualizando tarea: ${response.code()}")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("TaskRepository", "Fallo de red al actualizar: ${e.message}")
-        }
+            apiService.updateTask(task.id, task)
+        } catch (e: Exception) {}
     }
 
     suspend fun deleteTask(task: Task) {
         taskDao.deleteTaskById(task.id)
         try {
-            val response = apiService.deleteTask(task.id)
-            if (!response.isSuccessful) {
-                android.util.Log.e("TaskRepository", "Error eliminando tarea: ${response.code()}")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("TaskRepository", "Fallo de red al eliminar: ${e.message}")
-        }
+            apiService.deleteTask(task.id)
+        } catch (e: Exception) {}
+    }
+
+    suspend fun addReminder(taskId: String, reminder: com.example.workminder.data.model.Reminder) {
+        try {
+            apiService.addReminder(taskId, reminder)
+        } catch (e: Exception) {}
     }
 }

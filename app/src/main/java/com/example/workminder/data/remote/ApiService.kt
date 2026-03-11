@@ -7,47 +7,50 @@ import retrofit2.http.*
 
 interface ApiService {
     // Auth
-    @POST("api/auth/login")
+    @POST("auth/login")
     suspend fun login(@Body credentials: Map<String, String>): Response<ApiResponse<AuthResponse>>
 
-    @POST("api/auth/register")
+    @POST("auth/register")
     suspend fun register(@Body data: Map<String, String>): Response<ApiResponse<AuthResponse>>
 
-    @GET("api/auth/me")
+    @GET("auth/me")
     suspend fun getUserProfile(): Response<ApiResponse<com.example.workminder.data.model.User>>
 
-    @PUT("api/auth/profile")
+    @PUT("auth/profile")
     suspend fun updateProfile(@Body data: Map<String, String>): Response<ApiResponse<com.example.workminder.data.model.User>>
 
-    @PUT("api/auth/password")
+    @PUT("auth/password")
     suspend fun changePassword(@Body data: Map<String, String>): Response<ApiResponse<Unit>>
 
     // Tasks
-    @GET("api/tasks")
+    @GET("tasks")
     suspend fun getTasks(): Response<ApiResponse<List<Task>>>
 
-    @GET("api/tasks/prioritized")
+    @GET("tasks/prioritized")
     suspend fun getPrioritizedTasks(): Response<ApiResponse<List<Task>>>
 
-    @POST("api/tasks")
+    @POST("tasks")
     suspend fun createTask(@Body task: Task): Response<ApiResponse<Task>>
 
-    @PUT("api/tasks/{id}")
+    @PUT("tasks/{id}")
     suspend fun updateTask(@Path("id") id: String, @Body task: Task): Response<ApiResponse<Task>>
 
-    @DELETE("api/tasks/{id}")
+    @DELETE("tasks/{id}")
     suspend fun deleteTask(@Path("id") id: String): Response<ApiResponse<Unit>>
 
     // Subjects
-    @GET("api/subjects")
+    @GET("subjects")
     suspend fun getSubjects(): Response<ApiResponse<List<Subject>>>
 
-    @POST("api/subjects")
+    @POST("subjects")
     suspend fun createSubject(@Body data: Map<String, String>): Response<ApiResponse<Subject>>
 
-    @PUT("api/subjects/{id}")
+    @PUT("subjects/{id}")
     suspend fun updateSubject(@Path("id") id: String, @Body data: Map<String, String>): Response<ApiResponse<Subject>>
 
-    @DELETE("api/subjects/{id}")
+    @DELETE("subjects/{id}")
     suspend fun deleteSubject(@Path("id") id: String): Response<ApiResponse<Unit>>
+
+    @POST("tasks/{id}/reminders")
+    suspend fun addReminder(@Path("id") id: String, @Body reminder: com.example.workminder.data.model.Reminder): Response<ApiResponse<com.example.workminder.data.model.Reminder>>
 }

@@ -59,7 +59,11 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
             if (it.isEmpty()) it.add(java.util.UUID.randomUUID().toString() to "")
         }
     }
-    val selectedReminders = remember { mutableStateListOf<String>().apply { addAll(original.reminders) } }
+    val selectedReminders = remember { 
+        val list = mutableStateListOf<com.example.workminder.data.model.Reminder>()
+        list.addAll(original.reminders)
+        list
+    }
 
     var importanceExpanded by remember { mutableStateOf(false) }
     var complexityExpanded by remember { mutableStateOf(false) }
@@ -238,9 +242,9 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
             Spacer(modifier = Modifier.height(24.dp))
 
             EditLabel("Recordatorios")
-            selectedReminders.forEachIndexed { index, dateStr ->
+            selectedReminders.forEachIndexed { index, reminder ->
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(dateStr, color = NavyText, modifier = Modifier.weight(1f))
+                    Text(reminder.reminderDate, color = NavyText, modifier = Modifier.weight(1f))
                     IconButton(onClick = { selectedReminders.removeAt(index) }) {
                         Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error)
                     }
@@ -252,7 +256,7 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
                     val cal = java.util.Calendar.getInstance()
                     android.app.DatePickerDialog(context, { _, y, m, d ->
                         android.app.TimePickerDialog(context, { _, hh, mm ->
-                            val fullDateStr = String.format("%04d-%02d-%02d %02d:%02d", y, m + 1, d, hh, mm)
+                            val fullDateStr = String.format("%04d-%02d-%02dT%02d:%02d:00Z", y, m + 1, d, hh, mm)
                             try {
                                 val now = java.time.LocalDateTime.now()
                                 val selectedDate = java.time.LocalDateTime.of(y, m+1, d, hh, mm)
@@ -265,10 +269,10 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
                                     validationMessage = "El recordatorio no puede ser después de la fecha de entrega."
                                     showValidationError = true
                                 } else {
-                                    selectedReminders.add(fullDateStr)
+                                    selectedReminders.add(com.example.workminder.data.model.Reminder(fullDateStr))
                                 }
                             } catch (e: Exception) {
-                                selectedReminders.add(fullDateStr)
+                                selectedReminders.add(com.example.workminder.data.model.Reminder(fullDateStr))
                             }
                         }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show()
                     }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.DAY_OF_MONTH)).show()
@@ -300,7 +304,7 @@ fun EditTaskScreen(taskId: String, navController: NavController, viewModel: Main
                             urgency = urgencyCalculated,
                             importance = levelImp.value,
                             complexity = levelComp.value,
-                            extra_note = notes,
+                            extra_note = if (notes.isBlank()) null else notes,
                             subject_id = if (selectedSubjectId == "none") null else selectedSubjectId,
                             subtasks = subtasks.filter { it.second.isNotBlank() }.map { subPair ->
                                 val existing = original.subtasks.find { it.subtask_id == subPair.first }

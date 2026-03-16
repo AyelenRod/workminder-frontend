@@ -200,6 +200,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun logout(onComplete: () -> Unit) {
         viewModelScope.launch {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                db.clearAllTables()
+            }
             userRepo.clearSession()
             com.example.workminder.data.remote.AuthManager.clear()
             userName = "Usuario"

@@ -54,6 +54,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     AuthManager.userId = auth?.user?.id
                     
                     auth?.user?.let { remoteUser ->
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            AppDatabase.getDatabase(getApplication()).clearAllTables()
+                        }
                         userRepo.saveUserLocally(User(
                             id = remoteUser.id,
                             firstName = remoteUser.firstName ?: "",
@@ -85,6 +88,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     AuthManager.userId = auth?.user?.id
                     
                     auth?.user?.let { remoteUser ->
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            AppDatabase.getDatabase(getApplication()).clearAllTables()
+                        }
                         userRepo.saveUserLocally(User(
                             id = remoteUser.id,
                             firstName = remoteUser.firstName ?: "",

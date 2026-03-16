@@ -59,10 +59,10 @@ fun SettingsScreen(navController: NavController, viewModel: com.example.workmind
             SettingsItem(icon = Icons.Filled.Security, title = "Privacidad y Seguridad", onClick = { navController.navigate(NavRoutes.PrivacySecurity.route) })
             
             Spacer(modifier = Modifier.weight(1f))
-            
+
             Button(
-                onClick = { 
-                    viewModel.logout {
+                onClick = {
+                    viewModel.logout { // Ahora solo pasamos la lógica de navegación
                         navController.navigate(NavRoutes.Login.route) {
                             popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
                         }

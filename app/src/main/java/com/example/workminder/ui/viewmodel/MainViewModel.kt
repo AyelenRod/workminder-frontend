@@ -19,7 +19,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import com.example.workminder.data.repository.TaskRepository.getTasks
+import androidx.lifecycle.asLiveData
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getDatabase(application)
@@ -31,7 +31,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val currentUserId = AuthManager.userId ?: ""
 
-    val tasks = TaskRepository.getTasks(currentUserId).asLiveData()
+    var tasks = mutableStateListOf<Task>()
 
     var subjects = mutableStateListOf<Subject>()
     var currentUser by mutableStateOf<User?>(null)
@@ -57,7 +57,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun observeTasksData() {
         viewModelScope.launch {
-            taskRepo.getAllTasks().collect { list ->
+            taskRepo.getTasks(currentUserId).collect { list ->
                 val today = LocalDate.now()
                 val validTasks = mutableListOf<Task>()
                 
@@ -205,10 +205,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun logout(context: Context) {
+    fun logout(onSuccess: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            AppDatabase.getDatabase(context).clearAllTables()
-            AuthManager.clear() // Borra token e ID de memoria
+            // Limpia Room usando el contexto de la aplicación (AndroidViewModel ya lo tiene)
+            AppDatabase.getDatabase(getApplication()).clearAllTables()
+            AuthManager.clear()
+
+            launch(Dispatchers.Main) {
+                onSuccess()
+            }
         }
     }
 }

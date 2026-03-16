@@ -14,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.workminder.R
 import com.example.workminder.ui.navigation.NavRoutes
 import com.example.workminder.ui.theme.BackgroundGray
 import com.example.workminder.ui.theme.NavyText
@@ -58,10 +60,11 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
             verticalArrangement = Arrangement.Center
         ) {
             // Logo
-            Box(modifier = Modifier.size(90.dp), contentAlignment = Alignment.Center) {
-                Box(modifier = Modifier.size(56.dp).offset(x = 15.dp, y = 5.dp).clip(CircleShape).background(NavyText))
-                Icon(Icons.Filled.Edit, contentDescription = null, tint = YellowPrimary, modifier = Modifier.size(54.dp).offset(x = (-12).dp, y = 3.dp))
-            }
+            Image(
+                painter = painterResource(id = R.drawable.ic_workminder_logo),
+                contentDescription = "Logo",
+                modifier = Modifier.size(90.dp)
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             Text("Inicia sesión", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, color = NavyText)

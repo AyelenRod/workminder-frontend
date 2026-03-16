@@ -12,6 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.example.workminder.R
 import androidx.compose.ui.unit.dp
 import com.example.workminder.ui.theme.NavyText
 import com.example.workminder.ui.theme.YellowPrimary
@@ -34,26 +37,12 @@ fun SplashScreen(onSplashFinished: (Boolean) -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo: pencil + apple approximation
-            Box(modifier = Modifier.size(110.dp), contentAlignment = Alignment.Center) {
-                // Apple (circle behind)
-                Box(
-                    modifier = Modifier
-                        .size(68.dp)
-                        .offset(x = 18.dp, y = 6.dp)
-                        .clip(CircleShape)
-                        .background(NavyText)
-                )
-                // Pencil (icon in front-left)
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = null,
-                    tint = NavyText,
-                    modifier = Modifier
-                        .size(66.dp)
-                        .offset(x = (-14).dp, y = 4.dp)
-                )
-            }
+            // Logo
+            Image(
+                painter = painterResource(id = R.drawable.ic_workminder_logo),
+                contentDescription = "WorkMinder Logo",
+                modifier = Modifier.size(110.dp)
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 

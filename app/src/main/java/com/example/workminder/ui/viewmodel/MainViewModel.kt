@@ -72,12 +72,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     
                     if (shouldDelete) {
                         deleteTask(task)
-                    } else if (shouldUpdate) {
-                        val updated = task.copy(status = com.example.workminder.data.model.TaskStatus.LATE)
-                        updateTask(updated)
-                        validTasks.add(updated)
                     } else {
-                        validTasks.add(task)
+                        var finalTask = task
+                        if (shouldUpdate) {
+                            finalTask = finalTask.copy(status = com.example.workminder.data.model.TaskStatus.LATE)
+                        } 
+                        if (finalTask.status == com.example.workminder.data.model.TaskStatus.PENDING) {
+                            val currentUrgency = com.example.workminder.data.model.calculateUrgency(
+                                finalTask.importance, 
+                                finalTask.complexity, 
+                                finalTask.due_date
+                            )
+                            if (finalTask.urgency != currentUrgency) {
+                                finalTask = finalTask.copy(urgency = currentUrgency)
+                                shouldUpdate = true
+                            }
+                        }
+                        
+                        if (shouldUpdate) {
+                            updateTask(finalTask)
+                        }
+                        validTasks.add(finalTask)
                     }
                 }
                 tasks.clear()

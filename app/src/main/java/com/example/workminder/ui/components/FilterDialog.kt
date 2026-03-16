@@ -22,11 +22,13 @@ import com.example.workminder.ui.theme.YellowPrimary
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterDialog(
+    initialSortBy: String,
+    initialFilter: String,
     onDismiss: () -> Unit,
     onApply: (sortBy: String, filter: String) -> Unit = { _, _ -> }
 ) {
-    var sortBy by remember { mutableStateOf("Urgencia") }
-    var selectedFilter by remember { mutableStateOf("Pendientes") }
+    var sortBy by remember { mutableStateOf(initialSortBy) }
+    var selectedFilter by remember { mutableStateOf(initialFilter) }
     var dropdownExpanded by remember { mutableStateOf(false) }
 
     val sortOptions = listOf("Urgencia", "Importancia", "Complejidad", "Fecha de entrega")

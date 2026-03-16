@@ -11,6 +11,10 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,6 +30,8 @@ import com.example.workminder.ui.theme.Level5Red
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController, viewModel: com.example.workminder.ui.viewmodel.MainViewModel) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,13 +67,7 @@ fun SettingsScreen(navController: NavController, viewModel: com.example.workmind
             Spacer(modifier = Modifier.weight(1f))
             
             Button(
-                onClick = { 
-                    viewModel.logout {
-                        navController.navigate(NavRoutes.Login.route) {
-                            popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
-                        }
-                    }
-                },
+                onClick = { showLogoutDialog = true },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = SurfaceWhite, contentColor = Level5Red)
@@ -78,6 +78,42 @@ fun SettingsScreen(navController: NavController, viewModel: com.example.workmind
             }
             
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutDialog = false },
+                title = {
+                    Text(text = "Cerrar sesión", fontWeight = FontWeight.Bold)
+                },
+                text = {
+                    Text("¿Estás seguro de que deseas cerrar sesión?")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showLogoutDialog = false
+                            viewModel.logout {
+                                navController.navigate(NavRoutes.Login.route) {
+                                    popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Sí, cerrar sesión", color = Level5Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showLogoutDialog = false }
+                    ) {
+                        Text("Cancelar", color = NavyText)
+                    }
+                },
+                containerColor = SurfaceWhite,
+                titleContentColor = NavyText,
+                textContentColor = NavyText
+            )
         }
     }
 }

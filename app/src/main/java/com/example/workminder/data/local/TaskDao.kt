@@ -10,6 +10,10 @@ interface TaskDao {
     @Query("SELECT * FROM tasks")
     fun getAllTasks(): Flow<List<Task>>
 
+    // Reemplaza o añade en TaskDao.kt
+    @Query("SELECT * FROM tasks WHERE userId = :userId ORDER BY due_date ASC")
+    fun getTasksByUser(userId: String): Flow<List<Task>>
+
     @Query("SELECT * FROM tasks WHERE id = :id")
     suspend fun getTaskById(id: String): Task?
 

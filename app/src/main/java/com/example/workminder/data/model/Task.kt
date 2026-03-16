@@ -18,7 +18,8 @@ data class Task(
     @SerializedName("extra_note") var extra_note: String? = null,
     @SerializedName("subtasks") val subtasks: List<Subtask> = emptyList(),
     @SerializedName("reminders") val reminders: List<Reminder> = emptyList(), // Dates in String ISO format
-    var is_synced: Boolean = true
+    var is_synced: Boolean = true,
+    var userId: String
 ) {
     val title: String get() = task_title
     val dueDate: String get() = due_date

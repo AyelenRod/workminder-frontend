@@ -9,7 +9,9 @@ class TaskRepository(
     private val taskDao: TaskDao,
     private val apiService: ApiService
 ) {
-    fun getAllTasks(): Flow<List<Task>> = taskDao.getAllTasks()
+    fun getTasks(userId: String): Flow<List<Task>> {
+        return taskDao.getTasksByUser(userId)
+    }
 
     suspend fun syncTasks() {
         try {

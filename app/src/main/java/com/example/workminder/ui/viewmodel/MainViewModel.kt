@@ -8,14 +8,18 @@ import com.example.workminder.data.model.User
 import com.example.workminder.data.repository.*
 import com.example.workminder.data.local.AppDatabase
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
+import com.example.workminder.data.remote.AuthManager
 import com.example.workminder.data.remote.RetrofitClient
 import com.example.workminder.data.remote.NetworkConfig
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import com.example.workminder.data.repository.TaskRepository.getTasks
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getDatabase(application)
@@ -25,7 +29,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepo = AuthRepository()
     private val scheduler = com.example.workminder.notifications.ReminderScheduler(application)
 
-    var tasks = mutableStateListOf<Task>()
+    private val currentUserId = AuthManager.userId ?: ""
+
+    val tasks = TaskRepository.getTasks(currentUserId).asLiveData()
+
     var subjects = mutableStateListOf<Subject>()
     var currentUser by mutableStateOf<User?>(null)
     var userName by mutableStateOf("Usuario")
@@ -198,15 +205,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun logout(onComplete: () -> Unit) {
-        viewModelScope.launch {
-            userRepo.clearSession()
-            com.example.workminder.data.remote.AuthManager.clear()
-            userName = "Usuario"
-            currentUser = null
-            tasks.clear()
-            subjects.clear()
-            onComplete()
+    fun logout(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            AppDatabase.getDatabase(context).clearAllTables()
+            AuthManager.clear() // Borra token e ID de memoria
         }
     }
 }

@@ -81,7 +81,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
         if (activeStatusFilter == "Completadas" || activeStatusFilter == "Atrasadas") {
             null // No agrupar
         } else {
-            when (activeGroupBy) {
+            val rawGroups = when (activeGroupBy) {
                 "Urgencia" -> filteredTasks.groupBy { com.example.workminder.data.model.getUrgencyLevel(it.urgency).displayName }
                 "Importancia" -> filteredTasks.groupBy { com.example.workminder.data.model.TaskLevel.fromInt(it.importance).displayName }
                 "Complejidad" -> filteredTasks.groupBy { com.example.workminder.data.model.TaskLevel.fromInt(it.complexity).displayName }
@@ -90,7 +90,7 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                     val nextWeek = now.plusDays(7)
                     filteredTasks.groupBy { task ->
                         try {
-                            val date = java.time.LocalDate.parse(task.due_date)
+                            val date = java.time.LocalDate.parse(task.due_date.split("T")[0])
                             when {
                                 !date.isAfter(nextWeek) -> "Esta semana"
                                 !date.isAfter(now.plusDays(14)) -> "Siguiente semana"
@@ -101,11 +101,36 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                 }
                 else -> null
             }
+            
+            rawGroups?.let {
+                val orderMap = when (activeGroupBy) {
+                    "Urgencia" -> mapOf(
+                        "Muy urgente" to 1, "Urgente" to 2, "Algo urgente" to 3, "Poco urgente" to 4, "No muy urgente" to 5
+                    )
+                    "Importancia", "Complejidad" -> mapOf(
+                        "Muy alta" to 1, "Alta" to 2, "Media" to 3, "Baja" to 4, "Muy baja" to 5
+                    )
+                    "Fecha de entrega" -> mapOf(
+                        "Esta semana" to 1, "Siguiente semana" to 2, "Posteriores" to 3
+                    )
+                    else -> emptyMap()
+                }
+
+                val comparator = Comparator<String> { a, b ->
+                    val orderA = orderMap[a] ?: 99
+                    val orderB = orderMap[b] ?: 99
+                    orderA.compareTo(orderB)
+                }
+
+                it.toSortedMap(comparator)
+            }
         }
     }
 
     if (showFilter) {
         FilterDialog(
+            initialSortBy = activeGroupBy,
+            initialFilter = activeStatusFilter,
             onDismiss = { showFilter = false },
             onApply   = { groupBy, filter ->
                 activeGroupBy      = groupBy

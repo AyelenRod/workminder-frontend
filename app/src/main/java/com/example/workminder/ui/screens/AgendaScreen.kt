@@ -167,18 +167,26 @@ fun AgendaScreen(navController: NavController, viewModel: MainViewModel = viewMo
                 ) {
                     Text(text = "¿Qué deseas agregar?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = NavyText)
                     Spacer(modifier = Modifier.height(24.dp))
-                    Button(
+                    OutlinedButton(
                         onClick = { showAddDialog = false; navController.navigate(NavRoutes.NewTask.route) },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText)
+                        border = BorderStroke(2.dp, YellowPrimary),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = YellowPrimary.copy(alpha = 0.15f),
+                            contentColor = NavyText
+                        )
                     ) { Text("Nueva tarea", fontWeight = FontWeight.Bold) }
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
                         onClick = { showAddDialog = false; showNewSubjectDialog = true },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NavyText)
+                        border = BorderStroke(2.dp, YellowPrimary),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = YellowPrimary.copy(alpha = 0.15f),
+                            contentColor = NavyText
+                        )
                     ) { Text("Nueva materia", fontWeight = FontWeight.Bold) }
                 }
             }

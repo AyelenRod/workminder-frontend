@@ -52,23 +52,6 @@ fun BottomNavBar(navController: NavController) {
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (currentRoute == NavRoutes.NewTask.route) NavyText.copy(alpha = 0.12f) else NavyText.copy(alpha = 0f)),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(onClick = { navController.navigate(NavRoutes.NewTask.route) }) {
-                    Icon(
-                        imageVector = Icons.Filled.NoteAdd,
-                        contentDescription = "Nueva tarea",
-                        tint = NavyText.copy(alpha = if (currentRoute == NavRoutes.NewTask.route) 1f else 0.5f),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
-
             IconButton(onClick = {
                 navController.navigate(NavRoutes.Agenda.route) {
                     launchSingleTop = true

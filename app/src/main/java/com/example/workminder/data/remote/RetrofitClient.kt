@@ -15,9 +15,16 @@ object RetrofitClient {
         var request = chain.request()
         val token = AuthManager.token
         
-        if (token != null) {
+        if (!token.isNullOrBlank()) {
+            val trimmedToken = token.trim()
+            val finalToken = if (trimmedToken.startsWith("Bearer ", ignoreCase = true)) {
+                trimmedToken
+            } else {
+                "Bearer $trimmedToken"
+            }
+            
             request = request.newBuilder()
-                .header("Authorization", "Bearer ${token.trim()}")
+                .header("Authorization", finalToken)
                 .build()
         }
             

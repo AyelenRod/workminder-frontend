@@ -70,5 +70,5 @@ object NetworkConfig {
     }
 
     val baseUrl: String
-        get() = "http://$discoveredIp:$DEFAULT_PORT/api/"
+        get() = "http://workminder-backend.vercel.app/api/"
 }

@@ -40,6 +40,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var showPrivacyPolicy by remember { mutableStateOf(false) }
 
     // Observar éxito para navegar automáticamente
     LaunchedEffect(viewModel.isSuccess) {
@@ -143,7 +144,7 @@ fun RegisterScreen(
 
             // Botón de Registro vinculado al ViewModel
             Button(
-                onClick = { viewModel.register(firstName, lastName, email, password, confirmPassword) },
+                onClick = { showPrivacyPolicy = true },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary, contentColor = NavyText),
@@ -168,6 +169,57 @@ fun RegisterScreen(
                     modifier = Modifier.clickable { navController.popBackStack() }
                 )
             }
+        }
+
+        if (showPrivacyPolicy) {
+            AlertDialog(
+                onDismissRequest = { showPrivacyPolicy = false },
+                title = {
+                    Text("Políticas de Privacidad", fontWeight = FontWeight.Bold, color = NavyText)
+                },
+                text = {
+                    Text(
+                        """
+                            AVISO DE PRIVACIDAD (BETA ACADÉMICA)
+                            
+                            Responsabilidad y Compromiso:
+                            Esta aplicación es un proyecto de carácter estrictamente académico. Nos comprometemos a resguardar tus datos personales y de uso bajo estándares de responsabilidad y ética, asegurando que no sean compartidos con terceros ajenos a este proyecto.
+                            
+                            Finalidad de los datos:
+                            La información recopilada será utilizada exclusivamente para:
+                            ${'\u2022'} Análisis académico. Evaluar el uso de los usuarios para fines de aprendizaje e investigación técnica.
+                            ${'\u2022'} Mejora continua. Identificar errores y optimizar la experiencia de usuario durante esta etapa.
+                            
+                            Vigencia de uso:
+                            El periodo para el uso de esta aplicación y el tratamiento de datos está limitado hasta el mes de Abril de 2026
+                            
+                            Consentimiento:
+                            Al continuar y crear tu cuenta, aceptas nuestra Declaración de Políticas de Privacidad. ¿Deseas continuar con tu registro?
+                        """.trimIndent(),
+                        color = NavyText
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showPrivacyPolicy = false
+                            viewModel.register(firstName, lastName, email, password, confirmPassword)
+                        }
+                    ) {
+                        Text("Continuar con mi registro", color = NavyText, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showPrivacyPolicy = false }
+                    ) {
+                        Text("Rechazar", color = Color.Red, fontWeight = FontWeight.Bold)
+                    }
+                },
+                containerColor = BackgroundGray,
+                titleContentColor = NavyText,
+                textContentColor = NavyText
+            )
         }
     }
 }

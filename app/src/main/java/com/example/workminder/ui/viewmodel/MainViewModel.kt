@@ -61,7 +61,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     if (task.status == com.example.workminder.data.model.TaskStatus.DONE && task.completed_at != null) {
                         try {
                             val compDate = LocalDateTime.parse(task.completed_at, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
-                            if (ChronoUnit.DAYS.between(compDate, today) > 7) shouldDelete = true
+                            // Las tareas atrasadas o completadas ya no se borran automáticamente tras 7 días
                         } catch(e: Exception) {}
                     } else if (task.status == com.example.workminder.data.model.TaskStatus.PENDING) {
                         try {
